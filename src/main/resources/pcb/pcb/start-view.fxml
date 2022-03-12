@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="vBox" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1080.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pcb.pcb.StartController">
+   <children>
+      <MenuBar fx:id="menuBar">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+              <MenuItem mnemonicParsing="false" onAction="#openImage" text="Open Image..." />
+                  <MenuItem fx:id="closeImageOption" disable="true" mnemonicParsing="false" text="Close Image" />
+                  <MenuItem mnemonicParsing="false" text="Exit Application" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <SplitPane fx:id="parentPane" dividerPositions="0.2" prefHeight="695.0" prefWidth="1080.0">
+        <items>
+          <AnchorPane fx:id="optionsPane" minHeight="0.0" minWidth="0.0" prefHeight="633.0" prefWidth="192.0" SplitPane.resizableWithParent="false" />
+            <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" SplitPane.resizableWithParent="false">
+              <items>
+                  <FlowPane fx:id="ogImagePane" alignment="CENTER" prefHeight="200.0" prefWidth="200.0">
+                     <children>
+                        <ImageView fx:id="ogImageView" fitHeight="340.0" fitWidth="453.0" pickOnBounds="true" preserveRatio="true" />
+                     </children>
+                  </FlowPane>
+                  <FlowPane fx:id="newImagePane" alignment="CENTER" prefHeight="200.0" prefWidth="200.0">
+                     <children>
+                        <ImageView fx:id="newImageView" fitHeight="340.0" fitWidth="453.0" pickOnBounds="true" preserveRatio="true" />
+                     </children>
+                  </FlowPane>
+              </items>
+            </SplitPane>
+        </items>
+      </SplitPane>
+   </children>
+</VBox>
