@@ -2,6 +2,8 @@ package pcb.pcb;
 
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Group;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.SplitPane;
@@ -9,8 +11,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -25,6 +30,9 @@ public class StartController {
 
     @FXML
     private ImageView ogImageView, newImageView;
+
+    @FXML
+    private Pane ogImageViewPane;
 
     @FXML
     private void initialize(){
@@ -111,6 +119,7 @@ public class StartController {
         newImageView.setImage(blackWhite);
         //todo: testing, remove
         processImgToDisjoint(blackWhite, pixelSet);
+        drawRectangles();
     }
 
     private void processImgToDisjoint(WritableImage blackWhite, int[] pixelSet){    //processing the b&w image to a disjoint set
@@ -213,5 +222,21 @@ public class StartController {
                     noNodes++;
             }
             return noNodes;
+    }
+
+    private void drawRectangles(){
+        //https://stackoverflow.com/questions/43260526/how-to-add-a-group-to-the-scene-in-javafx
+        //https://stackoverflow.com/questions/34160639/add-shapes-to-javafx-pane-with-cartesian-coordinates
+        //https://stackoverflow.com/questions/40729967/drawing-shapes-on-javafx-canvas
+        System.out.println("Image res: " + ogImg.getWidth() + " x " + ogImg.getHeight());
+        System.out.println("Image view res: " + ogImageView.getFitWidth() + " x " + ogImageView.getFitHeight());
+        ogImageViewPane.setPrefWidth(ogImg.getWidth()); ogImageViewPane.setPrefHeight(ogImg.getHeight());
+        Rectangle rect = new Rectangle(0,0,20,20);
+        rect.setFill(Color.TRANSPARENT);
+        rect.setStroke(Color.RED);
+        rect.setStrokeWidth(3.0);
+        Group root = new Group(rect);
+        //todo: resize pane to image?
+        ogImageViewPane.getChildren().add(root);
     }
 }
