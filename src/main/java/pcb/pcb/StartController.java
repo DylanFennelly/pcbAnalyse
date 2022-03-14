@@ -63,13 +63,14 @@ public class StartController {
             Image image = new Image(imageFile.toURI().toString(), ogImageView.getFitWidth(), ogImageView.getFitHeight(), true, true);
             ogImageViewPane.setPrefWidth(image.getWidth()); ogImageViewPane.setPrefHeight(image.getHeight());   //resizes pane to image resolution (for drawing rectangle)
             ogImg = image;  //saving copy of original image;
-
-
+            if (ogImageViewPane.getChildren().size() == 2)  //removing existing rectangles from image if they exist rectangle group is second child of ogImageViewPane)
+                ogImageViewPane.getChildren().remove(1);
             ogImageView.setImage(image);
         }
     }
 
     private void isolateSelectedColour(Color selectedCol,PixelReader pixelReader, double hue, double sat, double bri){
+        //todo: modulo for overflow
         boolean hueRange = false, satRange = false, briRange = false, rollOver = false, rollUnder = false;
         int width = (int) ogImageView.getImage().getWidth();
         int height = (int) ogImageView.getImage().getHeight();
@@ -229,6 +230,8 @@ public class StartController {
     }
 
     private void drawRectangles(){
+        if (ogImageViewPane.getChildren().size() == 2)  //removing existing rectangles from image if they exist rectangle group is second child of ogImageViewPane)
+            ogImageViewPane.getChildren().remove(1);
         //https://stackoverflow.com/questions/43260526/how-to-add-a-group-to-the-scene-in-javafx
         //https://stackoverflow.com/questions/34160639/add-shapes-to-javafx-pane-with-cartesian-coordinates
         //https://stackoverflow.com/questions/40729967/drawing-shapes-on-javafx-canvas
@@ -240,6 +243,6 @@ public class StartController {
         Group root = new Group(rect);
         ogImageViewPane.getChildren().add(root);
         System.out.println(ogImageViewPane.getChildren());
-        //ogImageViewPane.getChildren().remove();
+
     }
 }
