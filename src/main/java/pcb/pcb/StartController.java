@@ -50,6 +50,7 @@ public class StartController {
 
     @FXML
     private void openImage(){
+
         FileChooser fileChooser = new FileChooser();    //https://docs.oracle.com/javafx/2/ui_controls/file-chooser.htm
         fileChooser.setTitle("Open Image");
         fileChooser.setInitialDirectory(new File(System.getProperty("user.home") + "\\Desktop"));   //setting initial directory to desktop
@@ -60,7 +61,10 @@ public class StartController {
         System.out.println(imageFile);
         if (imageFile != null) {
             Image image = new Image(imageFile.toURI().toString(), ogImageView.getFitWidth(), ogImageView.getFitHeight(), true, true);
+            ogImageViewPane.setPrefWidth(image.getWidth()); ogImageViewPane.setPrefHeight(image.getHeight());   //resizes pane to image resolution (for drawing rectangle)
             ogImg = image;  //saving copy of original image;
+
+
             ogImageView.setImage(image);
         }
     }
@@ -228,15 +232,14 @@ public class StartController {
         //https://stackoverflow.com/questions/43260526/how-to-add-a-group-to-the-scene-in-javafx
         //https://stackoverflow.com/questions/34160639/add-shapes-to-javafx-pane-with-cartesian-coordinates
         //https://stackoverflow.com/questions/40729967/drawing-shapes-on-javafx-canvas
-        System.out.println("Image res: " + ogImg.getWidth() + " x " + ogImg.getHeight());
-        System.out.println("Image view res: " + ogImageView.getFitWidth() + " x " + ogImageView.getFitHeight());
-        ogImageViewPane.setPrefWidth(ogImg.getWidth()); ogImageViewPane.setPrefHeight(ogImg.getHeight());
+
         Rectangle rect = new Rectangle(0,0,20,20);
         rect.setFill(Color.TRANSPARENT);
         rect.setStroke(Color.RED);
         rect.setStrokeWidth(3.0);
         Group root = new Group(rect);
-        //todo: resize pane to image?
         ogImageViewPane.getChildren().add(root);
+        System.out.println(ogImageViewPane.getChildren());
+        //ogImageViewPane.getChildren().remove();
     }
 }
