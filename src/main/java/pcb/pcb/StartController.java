@@ -255,6 +255,9 @@ public class StartController {
                         topLeft = true;
 
                     }else{
+                        if (elementID % width < x){ //if x value of pixel is less than top left (i.e further left)
+                            x = elementID % width;  //update x value to move further left
+                        }
                         //length
                         if(elementID % width > x){  //if x value of pixel is greater than top left (i.e further right)
                             if (elementID %width - x > l)  //if the difference between the two values is greater than current difference (length)
