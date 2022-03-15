@@ -254,12 +254,23 @@ public class StartController {
                         System.out.println("Top Left of disjoint: " + x + " , " + y);
                         topLeft = true;
 
+                    }else{
+                        //length
+                        if(elementID % width > x){  //if x value of pixel is greater than top left (i.e further right)
+                            if (elementID %width - x > l)  //if the difference between the two values is greater than current difference (length)
+                                l = elementID%width - x;  //length is equal to the difference between element ID and x
+                        }
+                        //width
+                        if (Math.floor(elementID / width) > y){ //if y value is greater than top left (i.e further down)
+                            if (Math.floor(elementID / width) - y > w)  //if difference between two values is greater than current difference (width)
+                                w=Math.floor(elementID / width) - y;    //width is equal to difference between elementID and y
+                        }
                     }
 
                 }
 
             }
-            Rectangle rect = new Rectangle(x,y,20,20);
+            Rectangle rect = new Rectangle(x,y,l,w);
             rect.setFill(Color.TRANSPARENT);
             rect.setStroke(Color.RED);
             rect.setStrokeWidth(3.0);
