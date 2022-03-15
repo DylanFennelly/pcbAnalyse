@@ -65,6 +65,7 @@ public class StartController {
             ogImg = image;  //saving copy of original image;
             if (ogImageViewPane.getChildren().size() == 2)  //removing existing rectangles from image if they exist rectangle group is second child of ogImageViewPane)
                 ogImageViewPane.getChildren().remove(1);
+            pixelSet = new int[(int) (image.getWidth() * image.getHeight())];
             ogImageView.setImage(image);
         }
     }
@@ -132,7 +133,7 @@ public class StartController {
         int height = (int) blackWhite.getHeight();
 
         //initialising array and array values
-        pixelSet = new int[(width * height)];
+
         for (int i = 0;i < pixelSet.length; i++){
             pixelSet[i] = i;
         }
@@ -237,30 +238,38 @@ public class StartController {
         //https://stackoverflow.com/questions/34160639/add-shapes-to-javafx-pane-with-cartesian-coordinates
         //https://stackoverflow.com/questions/40729967/drawing-shapes-on-javafx-canvas
 
-        Rectangle rect = new Rectangle(0,0,20,20);
-        rect.setFill(Color.TRANSPARENT);
-        rect.setStroke(Color.RED);
-        rect.setStrokeWidth(3.0);
-        Group root = new Group(rect);
+
+        Group root = new Group();   //creating group of nodes to add to pane
+
+        int width = (int) blackWhite.getWidth();
+
+        for (Integer currentRoot : roots){  //for each root in array
+            boolean topLeft = false;    //for one time condition to obtain top left of each disjoint set
+            double x =0, y=0 ,l=0, w=0; //values for drawing rectangles
+            for (int elementID=0;elementID< pixelSet.length;elementID++) {  //iterating through each pixel
+                if (find(pixelSet, elementID) != -1 && find(pixelSet, elementID) == currentRoot) {  //if value of pixel is not -1
+                    if (!topLeft) {   //if topLeft pixel has not been defined
+                        x = elementID % width;      // remainder of current index divided by width
+                        y = Math.floor(elementID / width);  //always rounds down (https://docs.oracle.com/javase/7/docs/api/java/lang/Math.html#floor%28double%29)
+                        System.out.println("Top Left of disjoint: " + x + " , " + y);
+                        topLeft = true;
+
+                    }
+
+                }
+
+            }
+            Rectangle rect = new Rectangle(x,y,20,20);
+            rect.setFill(Color.TRANSPARENT);
+            rect.setStroke(Color.RED);
+            rect.setStrokeWidth(3.0);
+            root.getChildren().add(rect);
+
+        }
+
         ogImageViewPane.getChildren().add(root);
         System.out.println(ogImageViewPane.getChildren());
 
-        int width = (int) blackWhite.getWidth();
-        int height = (int) blackWhite.getHeight();
-
-        for (Integer currentRoot : roots){
-            boolean topLeft = false;
-            double x, y ,l, w; //values for drawing rectangles
-            for (int i : pixelSet){
-                if (pixelSet[i] == currentRoot) {
-                    if (!topLeft) {   //if topLeft pixel has not been defined
-                        x =  i % width;
-                        y = Math.floor(i / width);  //always rounds down (https://docs.oracle.com/javase/7/docs/api/java/lang/Math.html#floor%28double%29)
-                        topLeft = true;
-                    }
-                }
-            }
-        }
 
     }
 }
