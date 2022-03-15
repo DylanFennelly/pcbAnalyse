@@ -124,7 +124,7 @@ public class StartController {
         newImageView.setImage(blackWhite);
         //todo: testing, remove
         processImgToDisjoint(blackWhite, pixelSet);
-        drawRectangles();
+        drawRectangles(pixelSet, roots, blackWhite);
     }
 
     private void processImgToDisjoint(WritableImage blackWhite, int[] pixelSet){    //processing the b&w image to a disjoint set
@@ -229,7 +229,8 @@ public class StartController {
             return noNodes;
     }
 
-    private void drawRectangles(){
+    private void drawRectangles(int[] pixelSet, ArrayList<Integer> roots, WritableImage blackWhite){
+        //todo: button to clear
         if (ogImageViewPane.getChildren().size() == 2)  //removing existing rectangles from image if they exist rectangle group is second child of ogImageViewPane)
             ogImageViewPane.getChildren().remove(1);
         //https://stackoverflow.com/questions/43260526/how-to-add-a-group-to-the-scene-in-javafx
@@ -243,6 +244,23 @@ public class StartController {
         Group root = new Group(rect);
         ogImageViewPane.getChildren().add(root);
         System.out.println(ogImageViewPane.getChildren());
+
+        int width = (int) blackWhite.getWidth();
+        int height = (int) blackWhite.getHeight();
+
+        for (Integer currentRoot : roots){
+            boolean topLeft = false;
+            double x, y ,l, w; //values for drawing rectangles
+            for (int i : pixelSet){
+                if (pixelSet[i] == currentRoot) {
+                    if (!topLeft) {   //if topLeft pixel has not been defined
+                        x =  i % width;
+                        y = Math.floor(i / width);  //always rounds down (https://docs.oracle.com/javase/7/docs/api/java/lang/Math.html#floor%28double%29)
+                        topLeft = true;
+                    }
+                }
+            }
+        }
 
     }
 }
