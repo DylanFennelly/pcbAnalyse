@@ -1,5 +1,6 @@
 package pcb.pcb;
 
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
@@ -228,9 +229,6 @@ public class StartController {
     }
 
     private void drawRectangles(int[] pixelSet, ArrayList<Integer> roots, Image blackWhite){
-        //todo: button to clear
-        if (ogImageViewPane.getChildren().size() == 2)  //removing existing rectangles from image if they exist rectangle group is second child of ogImageViewPane)
-            ogImageViewPane.getChildren().remove(1);
         //https://stackoverflow.com/questions/43260526/how-to-add-a-group-to-the-scene-in-javafx
         //https://stackoverflow.com/questions/34160639/add-shapes-to-javafx-pane-with-cartesian-coordinates
         //https://stackoverflow.com/questions/40729967/drawing-shapes-on-javafx-canvas
@@ -277,5 +275,14 @@ public class StartController {
         }
         ogImageViewPane.getChildren().add(root);
         //System.out.println(ogImageViewPane.getChildren());
+    }
+
+    @FXML
+    private void removeRectangles(ActionEvent actionEvent){
+        if (ogImageViewPane.getChildren().size() > 1)  //removing existing rectangles from image if they exist
+            System.out.println(ogImageViewPane.getChildren().size());
+            for (int i = ogImageViewPane.getChildren().size()-1; i > 0; i--) {
+                ogImageViewPane.getChildren().remove(i);
+            }
     }
 }
