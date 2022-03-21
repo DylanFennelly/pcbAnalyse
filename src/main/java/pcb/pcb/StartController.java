@@ -159,11 +159,11 @@ public class StartController {
 //                }
 //            }
 //        }
-
-        System.out.println("Number of disjoint sets: " + numOfRoots(pixelSet));
-        for (Integer i : roots){
-            System.out.println("Set of root " + i + " has " + sizeOfSet(i, pixelSet) + " element(s)");
-        }
+        numOfRoots(pixelSet);
+//        System.out.println("Number of disjoint sets: " + numOfRoots(pixelSet));
+//        for (Integer i : roots){
+//            System.out.println("Set of root " + i + " has " + sizeOfSet(i, pixelSet) + " element(s)");
+//        }
 
 
     }
@@ -197,6 +197,7 @@ public class StartController {
 
     }
     private int numOfRoots(int[] pixelSet){
+        //todo: rename + split up method into root identification and no. of roots
         roots = new ArrayList<>();   //creating flexible arrayList to keep track of roots
         for (int elementID=0;elementID< pixelSet.length;elementID++){   //navigating through each element (pixel) in the pixelSet array
             boolean matchingRoot = false;
@@ -243,46 +244,48 @@ public class StartController {
 
         int width = (int) blackWhite.getWidth();
 
-        for (Integer currentRoot : roots){  //for each root in array
-            boolean topLeft = false;    //for one time condition to obtain top left of each disjoint set
-            double x =0, y=0 ,l=0, w=0; //values for drawing rectangles
-            for (int elementID=0;elementID< pixelSet.length;elementID++) {  //iterating through each pixel
-                if (find(pixelSet, elementID) != -1 && find(pixelSet, elementID) == currentRoot) {  //if value of pixel is not -1
-                    if (!topLeft) {   //if topLeft pixel has not been defined
-                        x = elementID % width;      // remainder of current index divided by width
-                        y = Math.floor(elementID / width);  //always rounds down (https://docs.oracle.com/javase/7/docs/api/java/lang/Math.html#floor%28double%29)
-                        System.out.println("Top Left of disjoint: " + x + " , " + y);
-                        topLeft = true;
+        for (Integer currentRoot : roots) {  //for each root in array
+            if (sizeOfSet(currentRoot, pixelSet) > 20) {    //if set is greater than 20 elements/pixels
+                boolean topLeft = false;    //for one time condition to obtain top left of each disjoint set
+                double x = 0, y = 0, l = 0, w = 0; //values for drawing rectangles
+                for (int elementID = 0; elementID < pixelSet.length; elementID++) {  //iterating through each pixel
+                    if (find(pixelSet, elementID) != -1 && find(pixelSet, elementID) == currentRoot) {  //if value of pixel is not -1
+                        if (!topLeft) {   //if topLeft pixel has not been defined
+                            x = elementID % width;      // remainder of current index divided by width
+                            y = Math.floor(elementID / width);  //always rounds down (https://docs.oracle.com/javase/7/docs/api/java/lang/Math.html#floor%28double%29)
+                            //System.out.println("Top Left of disjoint: " + x + " , " + y);
+                            topLeft = true;
 
-                    }else{
-                        if (elementID % width < x){ //if x value of pixel is less than top left (i.e further left)
-                            x = elementID % width;  //update x value to move further left
+                        } else {
+                            if (elementID % width < x) { //if x value of pixel is less than top left (i.e further left)
+                                x = elementID % width;  //update x value to move further left
+                            }
+                            //length
+                            if (elementID % width > x) {  //if x value of pixel is greater than top left (i.e further right)
+                                if (elementID % width - x > l)  //if the difference between the two values is greater than current difference (length)
+                                    l = elementID % width - x;  //length is equal to the difference between element ID and x
+                            }
+                            //width
+                            if (Math.floor(elementID / width) > y) { //if y value is greater than top left (i.e further down)
+                                if (Math.floor(elementID / width) - y > w)  //if difference between two values is greater than current difference (width)
+                                    w = Math.floor(elementID / width) - y;    //width is equal to difference between elementID and y
+                            }
                         }
-                        //length
-                        if(elementID % width > x){  //if x value of pixel is greater than top left (i.e further right)
-                            if (elementID %width - x > l)  //if the difference between the two values is greater than current difference (length)
-                                l = elementID%width - x;  //length is equal to the difference between element ID and x
-                        }
-                        //width
-                        if (Math.floor(elementID / width) > y){ //if y value is greater than top left (i.e further down)
-                            if (Math.floor(elementID / width) - y > w)  //if difference between two values is greater than current difference (width)
-                                w=Math.floor(elementID / width) - y;    //width is equal to difference between elementID and y
-                        }
+
                     }
 
                 }
+                Rectangle rect = new Rectangle(x, y, l, w);
+                rect.setFill(Color.TRANSPARENT);
+                rect.setStroke(Color.RED);
+                rect.setStrokeWidth(2.0);
+                root.getChildren().add(rect);
 
             }
-            Rectangle rect = new Rectangle(x,y,l,w);
-            rect.setFill(Color.TRANSPARENT);
-            rect.setStroke(Color.RED);
-            rect.setStrokeWidth(3.0);
-            root.getChildren().add(rect);
-
         }
 
         ogImageViewPane.getChildren().add(root);
-        System.out.println(ogImageViewPane.getChildren());
+        //System.out.println(ogImageViewPane.getChildren());
 
 
     }
