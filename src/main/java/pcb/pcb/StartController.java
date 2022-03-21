@@ -45,6 +45,9 @@ public class StartController {
 
             System.out.println("\nHue: " + hue + "\nSaturation: " + sat + "\nBrightness: " + bri);
             isolateSelectedColour(col, pr, hue, sat, bri);
+            processImgToDisjoint(newImageView.getImage(), pixelSet);
+            identifyRoots(pixelSet);
+            drawRectangles(pixelSet, roots, newImageView.getImage());
         });
     }
 
@@ -123,12 +126,9 @@ public class StartController {
             }
         }
         newImageView.setImage(blackWhite);
-        //todo: testing, remove
-        processImgToDisjoint(blackWhite, pixelSet);
-        drawRectangles(pixelSet, roots, blackWhite);
     }
 
-    private void processImgToDisjoint(WritableImage blackWhite, int[] pixelSet){    //processing the b&w image to a disjoint set
+    private void processImgToDisjoint(Image blackWhite, int[] pixelSet){    //processing the b&w image to a disjoint set
         int width = (int) blackWhite.getWidth();
         int height = (int) blackWhite.getHeight();
 
@@ -159,7 +159,7 @@ public class StartController {
 //                }
 //            }
 //        }
-        numOfRoots(pixelSet);
+
 //        System.out.println("Number of disjoint sets: " + numOfRoots(pixelSet));
 //        for (Integer i : roots){
 //            System.out.println("Set of root " + i + " has " + sizeOfSet(i, pixelSet) + " element(s)");
@@ -176,7 +176,6 @@ public class StartController {
             return id;
         }else
             return -1;
-
     }
 
     public static void union(int index, int[] pixelSet, double width){
@@ -191,13 +190,11 @@ public class StartController {
             if (pixelSet[(int) (index + width)] != -1) {
                 // pixelSet[(int) (index + width)] = index;
                 pixelSet[find(pixelSet, (int) (index + width))] = find(pixelSet,index);
-
             }
         }
-
     }
-    private int numOfRoots(int[] pixelSet){
-        //todo: rename + split up method into root identification and no. of roots
+
+    private void identifyRoots(int[] pixelSet){
         roots = new ArrayList<>();   //creating flexible arrayList to keep track of roots
         for (int elementID=0;elementID< pixelSet.length;elementID++){   //navigating through each element (pixel) in the pixelSet array
             boolean matchingRoot = false;
@@ -219,7 +216,6 @@ public class StartController {
                 }
             }
         }
-        return roots.size();
     }
 
     private int sizeOfSet(int root, int[] pixelSet){
@@ -231,14 +227,13 @@ public class StartController {
             return noNodes;
     }
 
-    private void drawRectangles(int[] pixelSet, ArrayList<Integer> roots, WritableImage blackWhite){
+    private void drawRectangles(int[] pixelSet, ArrayList<Integer> roots, Image blackWhite){
         //todo: button to clear
         if (ogImageViewPane.getChildren().size() == 2)  //removing existing rectangles from image if they exist rectangle group is second child of ogImageViewPane)
             ogImageViewPane.getChildren().remove(1);
         //https://stackoverflow.com/questions/43260526/how-to-add-a-group-to-the-scene-in-javafx
         //https://stackoverflow.com/questions/34160639/add-shapes-to-javafx-pane-with-cartesian-coordinates
         //https://stackoverflow.com/questions/40729967/drawing-shapes-on-javafx-canvas
-
 
         Group root = new Group();   //creating group of nodes to add to pane
 
@@ -271,22 +266,16 @@ public class StartController {
                                     w = Math.floor(elementID / width) - y;    //width is equal to difference between elementID and y
                             }
                         }
-
                     }
-
                 }
                 Rectangle rect = new Rectangle(x, y, l, w);
                 rect.setFill(Color.TRANSPARENT);
                 rect.setStroke(Color.RED);
                 rect.setStrokeWidth(2.0);
                 root.getChildren().add(rect);
-
             }
         }
-
         ogImageViewPane.getChildren().add(root);
         //System.out.println(ogImageViewPane.getChildren());
-
-
     }
 }
