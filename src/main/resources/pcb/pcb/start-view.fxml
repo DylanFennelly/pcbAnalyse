@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
@@ -7,6 +8,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox fx:id="vBox" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1080.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pcb.pcb.StartController">
@@ -24,12 +26,19 @@
       </MenuBar>
       <SplitPane fx:id="parentPane" dividerPositions="0.2" prefHeight="695.0" prefWidth="1080.0">
         <items>
-          <AnchorPane fx:id="optionsPane" minHeight="0.0" minWidth="0.0" prefHeight="633.0" prefWidth="192.0" SplitPane.resizableWithParent="false" />
+          <AnchorPane fx:id="optionsPane" minHeight="0.0" minWidth="0.0" prefHeight="633.0" prefWidth="192.0" SplitPane.resizableWithParent="false">
+               <children>
+                  <Button fx:id="removeRectButton" mnemonicParsing="false" text="Remove Highlights" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="30.0" onAction="#removeRectangles" />
+               </children></AnchorPane>
             <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" SplitPane.resizableWithParent="false">
               <items>
                   <FlowPane fx:id="ogImagePane" alignment="CENTER" prefHeight="200.0" prefWidth="200.0">
                      <children>
-                        <ImageView fx:id="ogImageView" fitHeight="340.0" fitWidth="453.0" pickOnBounds="true" preserveRatio="true" />
+                        <Pane fx:id="ogImageViewPane" prefHeight="340.0" prefWidth="453.0">
+                           <children>
+                              <ImageView fx:id="ogImageView" fitHeight="340.0" fitWidth="453.0" pickOnBounds="true" preserveRatio="true" />
+                           </children>
+                        </Pane>
                      </children>
                   </FlowPane>
                   <FlowPane fx:id="newImagePane" alignment="CENTER" prefHeight="200.0" prefWidth="200.0">
