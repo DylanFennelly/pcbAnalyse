@@ -279,6 +279,7 @@ public class StartController {
         Group root = new Group();   //creating group of nodes to add to pane
 
         int width = (int) blackWhite.getWidth(), componentNo = 1;   //increase for each component scanned
+        //todo: component no.s over multiple component types
 
         for (Integer currentRoot : roots) {  //for each root in array
             if (sizeOfSet(currentRoot, pixelSet) >= minSetSize) {    //if set is greater than or equal to specified size
