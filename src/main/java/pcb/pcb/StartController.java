@@ -21,6 +21,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class StartController {
     private int[] pixelSet;
@@ -46,7 +47,7 @@ public class StartController {
     private Slider satRangeSlider, briRangeSlider;
 
     @FXML
-    private Spinner<Integer> hueRangeSpinner, minPixelSizeSpinner;   //todo: error handling for spinner?
+    private Spinner<Integer> hueRangeSpinner, minPixelSizeSpinner;
 
     @FXML
     private void initialize(){
@@ -73,6 +74,7 @@ public class StartController {
             isolateSelectedColour(col, pr, hue, sat, bri);
             processImgToDisjoint(newImageView.getImage(), pixelSet);
             identifyRoots(pixelSet);
+            roots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts roots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
             drawRectangles(pixelSet, roots, newImageView.getImage());
         });
     }
@@ -276,7 +278,7 @@ public class StartController {
 
         Group root = new Group();   //creating group of nodes to add to pane
 
-        int width = (int) blackWhite.getWidth();
+        int width = (int) blackWhite.getWidth(), componentNo = 1;   //increase for each component scanned
 
         for (Integer currentRoot : roots) {  //for each root in array
             if (sizeOfSet(currentRoot, pixelSet) >= minSetSize) {    //if set is greater than or equal to specified size
@@ -311,12 +313,10 @@ public class StartController {
                 rect.setFill(Color.TRANSPARENT);
                 rect.setStroke(Color.RED);
                 rect.setStrokeWidth(2.0);
-                Tooltip tooltip = new Tooltip("Estimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
+                Tooltip tooltip = new Tooltip("Component number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
                 Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
                 root.getChildren().add(rect);
-
-
-
+                componentNo++;
             }
         }
         ogImageViewPane.getChildren().add(root);
