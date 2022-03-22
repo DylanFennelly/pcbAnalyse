@@ -79,15 +79,15 @@ public class StartController {
         boolean hueRange = false, satRange = false, briRange = false, rollOver = false, rollUnder = false;
         int width = (int) ogImageView.getImage().getWidth();
         int height = (int) ogImageView.getImage().getHeight();
-        double reducedHue = hue - 30, increasedHue = hue + 30, reducedSat = sat - 0.25, increasedSat = sat + 0.25, reducedBri = bri - 0.25, increasedBri = bri + 0.25;
+        double reducedHue = hue - 20, increasedHue = hue + 20, reducedSat = sat - 0.32, increasedSat = sat + 0.32, reducedBri = bri - 0.25, increasedBri = bri + 0.25;
         //ensuring that the hue values correctly roll over
         if (reducedHue < 0) {
-            reducedHue = 360 + (hue - 30);
+            reducedHue = 360 + (hue - 20);
             rollUnder = true;
         }
 
         if (increasedHue > 360) {
-            increasedHue = (hue + 30) - 360;
+            increasedHue = (hue + 20) - 360;
             rollOver = true;
         }
         WritableImage blackWhite = new WritableImage(width, height);
@@ -95,7 +95,7 @@ public class StartController {
 
         for (int y=0; y<height; y++){
             for (int x=0; x<width; x++){
-                if (pixelReader.getColor(x, y).getHue() >= 330) {    //for hue values on the upper border
+                if (pixelReader.getColor(x, y).getHue() >= 340) {    //for hue values on the upper border
                     if (rollUnder) {     //if reduced hue value rolled under to 350's
                         hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue); //check only if hue is greater than rolled-under reduced value.
                     }else if(rollOver){
@@ -103,7 +103,7 @@ public class StartController {
                     } else {      //if no roll under occurred
                         hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
                     }
-                }else if(pixelReader.getColor(x, y).getHue() <= 30){ //for hue values on the lower border
+                }else if(pixelReader.getColor(x, y).getHue() <= 20){ //for hue values on the lower border
                     if (rollOver) { //if increase hue valued rolled over to single digits
                         hueRange = (pixelReader.getColor(x, y).getHue() <= increasedHue); //check only if hue is less than rolled-over increased value.
                     }else if(rollUnder){
@@ -271,6 +271,7 @@ public class StartController {
                 rect.setStroke(Color.RED);
                 rect.setStrokeWidth(2.0);
                 root.getChildren().add(rect);
+                
             }
         }
         ogImageViewPane.getChildren().add(root);
