@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 <VBox fx:id="vBox" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1080.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pcb.pcb.StartController">
    <children>
@@ -28,7 +32,23 @@
         <items>
           <AnchorPane fx:id="optionsPane" minHeight="0.0" minWidth="0.0" prefHeight="633.0" prefWidth="192.0" SplitPane.resizableWithParent="false">
                <children>
-                  <Button fx:id="removeRectButton" mnemonicParsing="false" text="Remove Highlights" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="30.0" onAction="#removeRectangles" />
+                  <Button fx:id="removeRectButton" mnemonicParsing="false" onAction="#removeRectangles" text="Remove Highlights" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="10.0" />
+                  <Label layoutX="20.0" layoutY="44.0" text="Options" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="50.0">
+                     <font>
+                        <Font name="System Bold" size="13.0" />
+                     </font>
+                  </Label>
+                  <Spinner fx:id="hueRangeSpinner" initialValue="20" layoutX="20.0" layoutY="69.0" max="360" min="0" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="100.0" />
+                  <Label layoutX="20.0" layoutY="83.0" text="Hue Range" />
+                  <Label layoutX="20.0" layoutY="146.0" text="Saturation Range" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="140.0" />
+                  <Slider fx:id="satRangeSlider" blockIncrement="0.01" layoutX="20.0" layoutY="157.0" majorTickUnit="2.0" max="1.0" minorTickCount="19" showTickMarks="true" value="0.32" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="160.0" />
+                  <Label layoutX="20.0" layoutY="203.0" text="Brightness Range" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="203.0" />
+                  <Slider fx:id="briRangeSlider" blockIncrement="0.01" layoutX="20.0" layoutY="219.0" majorTickUnit="2.0" max="1.0" minorTickCount="19" showTickMarks="true" value="0.25" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="220.0" />
+                  <Label fx:id="satRangeLabel" layoutX="169.0" layoutY="164.0" text="0.32" AnchorPane.leftAnchor="169.0" AnchorPane.topAnchor="160.0" />
+                  <Label fx:id="briRangeLabel" layoutX="169.0" layoutY="224.0" text="0.25" AnchorPane.leftAnchor="169.0" AnchorPane.topAnchor="220.0" />
+                  <Button layoutX="143.0" layoutY="294.0" mnemonicParsing="false" onAction="#resetRangeValues" text="Reset" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="320.0" />
+                  <Spinner fx:id="minPixelSizeSpinner" layoutX="20.0" layoutY="262.0" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="280.0" initialValue="25" min="0" max="100000" />
+                  <Label layoutX="20.0" layoutY="263.0" text="Set Size Minimum (Pixel Units)" />
                </children></AnchorPane>
             <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" SplitPane.resizableWithParent="false">
               <items>
