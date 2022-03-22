@@ -28,7 +28,7 @@
         <items>
           <AnchorPane fx:id="optionsPane" minHeight="0.0" minWidth="0.0" prefHeight="633.0" prefWidth="192.0" SplitPane.resizableWithParent="false">
                <children>
-                  <Button mnemonicParsing="false" text="Remove Highlights" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="30.0" onAction="#removeRectangles" />
+                  <Button fx:id="removeRectButton" mnemonicParsing="false" text="Remove Highlights" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="30.0" onAction="#removeRectangles" />
                </children></AnchorPane>
             <SplitPane dividerPositions="0.5" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" SplitPane.resizableWithParent="false">
               <items>

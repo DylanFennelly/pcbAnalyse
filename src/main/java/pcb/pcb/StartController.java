@@ -5,9 +5,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.SplitPane;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
@@ -34,6 +32,9 @@ public class StartController {
 
     @FXML
     private Pane ogImageViewPane;
+
+    @FXML
+    private Button removeRectButton;
 
     @FXML
     private void initialize(){
@@ -238,7 +239,7 @@ public class StartController {
         int width = (int) blackWhite.getWidth();
 
         for (Integer currentRoot : roots) {  //for each root in array
-            if (sizeOfSet(currentRoot, pixelSet) > 20) {    //if set is greater than 20 elements/pixels
+            if (sizeOfSet(currentRoot, pixelSet) > 24) {    //if set is greater than 20 elements/pixels
                 boolean topLeft = false;    //for one time condition to obtain top left of each disjoint set
                 double x = 0, y = 0, l = 0, w = 0; //values for drawing rectangles
                 for (int elementID = 0; elementID < pixelSet.length; elementID++) {  //iterating through each pixel
@@ -270,8 +271,12 @@ public class StartController {
                 rect.setFill(Color.TRANSPARENT);
                 rect.setStroke(Color.RED);
                 rect.setStrokeWidth(2.0);
+                Tooltip tooltip = new Tooltip("Estimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
+                Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
                 root.getChildren().add(rect);
-                
+
+
+
             }
         }
         ogImageViewPane.getChildren().add(root);
