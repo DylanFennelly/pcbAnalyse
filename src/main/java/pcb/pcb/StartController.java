@@ -17,6 +17,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -24,6 +26,10 @@ public class StartController {
     private int[] pixelSet;
     private ArrayList<Integer> roots;
     private Image ogImg;
+    private final DecimalFormat df = new DecimalFormat("#.##");   //https://stackoverflow.com/questions/153724/how-to-round-a-number-to-n-decimal-places-in-java
+    private int hueTolerance, minSetSize;
+    private double satTolerance, briTolerance;
+
     @FXML
     private MenuBar menuBar;
 
@@ -34,10 +40,27 @@ public class StartController {
     private Pane ogImageViewPane;
 
     @FXML
-    private Button removeRectButton;
+    private Label satRangeLabel, briRangeLabel;
+
+    @FXML
+    private Slider satRangeSlider, briRangeSlider;
+
+    @FXML
+    private Spinner<Integer> hueRangeSpinner, minPixelSizeSpinner;   //todo: error handling for spinner?
 
     @FXML
     private void initialize(){
+        df.setRoundingMode(RoundingMode.CEILING);
+        //updating slider labels upon moving sliders    |   https://stackoverflow.com/questions/40593284/how-can-i-define-a-method-for-slider-change-in-controller-of-a-javafx-program
+        briRangeSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            String twodp = df.format( newValue.doubleValue());
+            briRangeLabel.setText(twodp);
+        });
+        satRangeSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            String twodp = df.format( newValue.doubleValue());
+            satRangeLabel.setText(twodp);
+        });
+
         ogImageView.setOnMouseClicked(e -> {
             PixelReader pr = ogImageView.getImage().getPixelReader();
             Color col = pr.getColor( (int)e.getX(), (int)e.getY());
@@ -46,6 +69,7 @@ public class StartController {
             double bri = col.getBrightness();
 
             System.out.println("\nHue: " + hue + "\nSaturation: " + sat + "\nBrightness: " + bri);
+            setRangeValues();
             isolateSelectedColour(col, pr, hue, sat, bri);
             processImgToDisjoint(newImageView.getImage(), pixelSet);
             identifyRoots(pixelSet);
@@ -53,9 +77,25 @@ public class StartController {
         });
     }
 
+    private void setRangeValues(){  //run when apply button is pressed or when image is clicked
+        hueTolerance = hueRangeSpinner.getValue();
+        satTolerance = satRangeSlider.getValue();
+        briTolerance = briRangeSlider.getValue();
+        minSetSize = minPixelSizeSpinner.getValue();
+    }
+
+    @FXML
+    private void resetRangeValues(){    //resets values back to defaults
+        hueRangeSpinner.getValueFactory().setValue(20);
+        satRangeSlider.setValue(0.32);
+        satRangeLabel.setText("0.32");
+        briRangeSlider.setValue(0.25);
+        briRangeLabel.setText("0.25");
+        minPixelSizeSpinner.getValueFactory().setValue(25);
+    }
+
     @FXML
     private void openImage(){
-
         FileChooser fileChooser = new FileChooser();    //https://docs.oracle.com/javafx/2/ui_controls/file-chooser.htm
         fileChooser.setTitle("Open Image");
         fileChooser.setInitialDirectory(new File(System.getProperty("user.home") + "\\Desktop"));   //setting initial directory to desktop
@@ -80,15 +120,15 @@ public class StartController {
         boolean hueRange = false, satRange = false, briRange = false, rollOver = false, rollUnder = false;
         int width = (int) ogImageView.getImage().getWidth();
         int height = (int) ogImageView.getImage().getHeight();
-        double reducedHue = hue - 20, increasedHue = hue + 20, reducedSat = sat - 0.32, increasedSat = sat + 0.32, reducedBri = bri - 0.25, increasedBri = bri + 0.25;
+        double reducedHue = hue - hueTolerance, increasedHue = hue + hueTolerance, reducedSat = sat - satTolerance, increasedSat = sat + satTolerance, reducedBri = bri - briTolerance, increasedBri = bri + briTolerance;
         //ensuring that the hue values correctly roll over
         if (reducedHue < 0) {
-            reducedHue = 360 + (hue - 20);
+            reducedHue = 360 + (hue - hueTolerance);
             rollUnder = true;
         }
 
         if (increasedHue > 360) {
-            increasedHue = (hue + 20) - 360;
+            increasedHue = (hue + hueTolerance) - 360;
             rollOver = true;
         }
         WritableImage blackWhite = new WritableImage(width, height);
@@ -96,7 +136,7 @@ public class StartController {
 
         for (int y=0; y<height; y++){
             for (int x=0; x<width; x++){
-                if (pixelReader.getColor(x, y).getHue() >= 340) {    //for hue values on the upper border
+                if (pixelReader.getColor(x, y).getHue() >= (360 - hueTolerance)) {    //for hue values on the upper border
                     if (rollUnder) {     //if reduced hue value rolled under to 350's
                         hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue); //check only if hue is greater than rolled-under reduced value.
                     }else if(rollOver){
@@ -104,7 +144,7 @@ public class StartController {
                     } else {      //if no roll under occurred
                         hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
                     }
-                }else if(pixelReader.getColor(x, y).getHue() <= 20){ //for hue values on the lower border
+                }else if(pixelReader.getColor(x, y).getHue() <= hueTolerance){ //for hue values on the lower border
                     if (rollOver) { //if increase hue valued rolled over to single digits
                         hueRange = (pixelReader.getColor(x, y).getHue() <= increasedHue); //check only if hue is less than rolled-over increased value.
                     }else if(rollUnder){
@@ -239,7 +279,7 @@ public class StartController {
         int width = (int) blackWhite.getWidth();
 
         for (Integer currentRoot : roots) {  //for each root in array
-            if (sizeOfSet(currentRoot, pixelSet) > 24) {    //if set is greater than 20 elements/pixels
+            if (sizeOfSet(currentRoot, pixelSet) >= minSetSize) {    //if set is greater than or equal to specified size
                 boolean topLeft = false;    //for one time condition to obtain top left of each disjoint set
                 double x = 0, y = 0, l = 0, w = 0; //values for drawing rectangles
                 for (int elementID = 0; elementID < pixelSet.length; elementID++) {  //iterating through each pixel
