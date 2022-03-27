@@ -10,9 +10,14 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -76,7 +81,7 @@ public class StartController {
             processImgToDisjoint(newImageView.getImage(), pixelSet);
             identifyRoots(pixelSet);
             roots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts roots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
-            drawRectangles(pixelSet, roots, newImageView.getImage());
+            drawRectangles(pixelSet, roots, newImageView.getImage(), totalRoots);
             for (Integer root : roots){
                 if (sizeOfSet(root, pixelSet) >= minSetSize)
                     totalRoots.add(root);
@@ -278,7 +283,7 @@ public class StartController {
             return noNodes;
     }
 
-    private void drawRectangles(int[] pixelSet, ArrayList<Integer> roots, Image blackWhite){
+    private void drawRectangles(int[] pixelSet, ArrayList<Integer> roots, Image blackWhite, ArrayList<Integer> totalRoots){
         //https://stackoverflow.com/questions/43260526/how-to-add-a-group-to-the-scene-in-javafx
         //https://stackoverflow.com/questions/34160639/add-shapes-to-javafx-pane-with-cartesian-coordinates
         //https://stackoverflow.com/questions/40729967/drawing-shapes-on-javafx-canvas
@@ -320,9 +325,13 @@ public class StartController {
                 rect.setFill(Color.TRANSPARENT);
                 rect.setStroke(Color.RED);
                 rect.setStrokeWidth(2.0);
+                Text number = new Text(x+5,y+10,""+componentNo);//draws a label with the componentNo in the top left of each rectangle
+                number.setFont(Font.font("Arial", FontWeight.NORMAL, FontPosture.REGULAR,10));  //https://www.tutorialspoint.com/how-to-add-stroke-and-color-to-text-in-javafx
+                number.setStroke(Color.WHITE);
+                number.setStrokeWidth(0.1);
                 Tooltip tooltip = new Tooltip("Component number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
                 Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
-                root.getChildren().add(rect);
+                root.getChildren().addAll(rect, number);
                 componentNo++;
             }
         }
