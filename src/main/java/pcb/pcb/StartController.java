@@ -25,11 +25,12 @@ import java.util.Collections;
 
 public class StartController {
     private int[] pixelSet;
-    private ArrayList<Integer> roots;
+    private ArrayList<Integer> roots, totalRoots = new ArrayList<>();   //totalRoots: ArrayList of roots across multiple
     private Image ogImg;
     private final DecimalFormat df = new DecimalFormat("#.##");   //https://stackoverflow.com/questions/153724/how-to-round-a-number-to-n-decimal-places-in-java
     private int hueTolerance, minSetSize;
     private double satTolerance, briTolerance;
+
 
     @FXML
     private MenuBar menuBar;
@@ -76,6 +77,11 @@ public class StartController {
             identifyRoots(pixelSet);
             roots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts roots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
             drawRectangles(pixelSet, roots, newImageView.getImage());
+            for (Integer root : roots){
+                if (sizeOfSet(root, pixelSet) >= minSetSize)
+                    totalRoots.add(root);
+            }
+            System.out.println(totalRoots.size());
         });
     }
 
@@ -113,6 +119,7 @@ public class StartController {
             if (ogImageViewPane.getChildren().size() == 2)  //removing existing rectangles from image if they exist rectangle group is second child of ogImageViewPane)
                 ogImageViewPane.getChildren().remove(1);
             pixelSet = new int[(int) (image.getWidth() * image.getHeight())];
+            totalRoots.clear();     //empty total roots
             ogImageView.setImage(image);
         }
     }
@@ -278,8 +285,7 @@ public class StartController {
 
         Group root = new Group();   //creating group of nodes to add to pane
 
-        int width = (int) blackWhite.getWidth(), componentNo = 1;   //increase for each component scanned
-        //todo: component no.s over multiple component types
+        int width = (int) blackWhite.getWidth(), componentNo = totalRoots.size() + 1;   //increase for each component scanned
 
         for (Integer currentRoot : roots) {  //for each root in array
             if (sizeOfSet(currentRoot, pixelSet) >= minSetSize) {    //if set is greater than or equal to specified size
@@ -327,9 +333,9 @@ public class StartController {
     @FXML
     private void removeRectangles(ActionEvent actionEvent){
         if (ogImageViewPane.getChildren().size() > 1)  //removing existing rectangles from image if they exist
-            System.out.println(ogImageViewPane.getChildren().size());
             for (int i = ogImageViewPane.getChildren().size()-1; i > 0; i--) {
                 ogImageViewPane.getChildren().remove(i);
             }
+            totalRoots.clear();
     }
 }
