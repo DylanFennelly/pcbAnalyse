@@ -331,7 +331,7 @@ public class StartController {
                 number.setStrokeWidth(0.1);
                 Tooltip tooltip = new Tooltip("Component number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
                 Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
-                root.getChildren().addAll(rect, number);
+                root.getChildren().addAll(number, rect);
                 componentNo++;
             }
         }
