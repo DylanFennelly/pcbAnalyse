@@ -37,7 +37,6 @@ public class StartController {
     private int hueTolerance, minSetSize;
     private double satTolerance, briTolerance;
 
-
     @FXML
     private MenuBar menuBar;
 
@@ -90,7 +89,6 @@ public class StartController {
                 if (sizeOfSet(root, pixelSet) >= minSetSize)
                     totalRoots.add(root);
             }
-            System.out.println(totalRoots.size());
         });
     }
 
@@ -215,20 +213,6 @@ public class StartController {
                 arrayIndex++;
             }
         }
-//        for (int rootId=0;rootId< pixelSet.length;rootId++){
-//            for (int elementID=0;elementID< pixelSet.length;elementID++){
-//                if (find(pixelSet,elementID) == rootId){
-//                    System.out.println("The root of " + elementID + " is " + find(pixelSet, elementID));
-//                }
-//            }
-//        }
-
-//        System.out.println("Number of disjoint sets: " + numOfRoots(pixelSet));
-//        for (Integer i : roots){
-//            System.out.println("Set of root " + i + " has " + sizeOfSet(i, pixelSet) + " element(s)");
-//        }
-
-
     }
 
     //Iterative version of find
