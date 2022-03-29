@@ -30,11 +30,12 @@ import java.util.Collections;
 
 public class StartController {
     //todo: remove noise from blackWhite image
+    //todo: array of only valid roots
     private int[] pixelSet;
-    private ArrayList<Integer> roots, totalRoots = new ArrayList<>();   //totalRoots: ArrayList of roots across multiple
+    private ArrayList<Integer> roots, validRoots, totalRoots = new ArrayList<>();   //totalRoots: ArrayList of roots across multiple
     private Image ogImg;
     private final DecimalFormat df = new DecimalFormat("#.##");   //https://stackoverflow.com/questions/153724/how-to-round-a-number-to-n-decimal-places-in-java
-    private int hueTolerance, minSetSize;
+    private int hueTolerance, minSetSize, icbCount, resistorCount, miscCount;
     private double satTolerance, briTolerance;
 
     @FXML
@@ -77,14 +78,17 @@ public class StartController {
             double hue = col.getHue();
             double sat = col.getSaturation();
             double bri = col.getBrightness();
+            roots = new ArrayList<>(); validRoots = new ArrayList<>(); //creating flexible arrayList to keep track of roots and validRoots (roots over minimum set size limit)
 
             System.out.println("\nHue: " + hue + "\nSaturation: " + sat + "\nBrightness: " + bri);
             setRangeValues();
             isolateSelectedColour(col, pr, hue, sat, bri);
             processImgToDisjoint(newImageView.getImage(), pixelSet);
-            identifyRoots(pixelSet);
-            roots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts roots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
-            drawRectangles(pixelSet, roots, newImageView.getImage(), totalRoots);
+            identifyRoots(pixelSet, roots);
+            identifyValidRoots(roots,validRoots,pixelSet,minSetSize);
+            validRoots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts validRoots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
+            //identifyComponentType(hue,sat,bri,roots,icbCount);
+            drawRectangles(pixelSet, validRoots, newImageView.getImage(), totalRoots);
             for (Integer root : roots){
                 if (sizeOfSet(root, pixelSet) >= minSetSize)
                     totalRoots.add(root);
@@ -106,7 +110,7 @@ public class StartController {
         satRangeLabel.setText("0.32");
         briRangeSlider.setValue(0.25);
         briRangeLabel.setText("0.25");
-        minPixelSizeSpinner.getValueFactory().setValue(25);
+        minPixelSizeSpinner.getValueFactory().setValue(55);
     }
 
     @FXML
@@ -129,6 +133,8 @@ public class StartController {
             totalRoots.clear();     //empty total roots
             componentsTextArea.clear();
             removeRectangles();
+
+            icbCount = 0; resistorCount = 0; miscCount = 0;
             totalComponentsLabel.setText("Total Components: 0");
             ogImageView.setImage(image);
         }
@@ -241,8 +247,7 @@ public class StartController {
         }
     }
 
-    private void identifyRoots(int[] pixelSet){
-        roots = new ArrayList<>();   //creating flexible arrayList to keep track of roots
+    private void identifyRoots(int[] pixelSet, ArrayList<Integer> roots){
         for (int elementID=0;elementID< pixelSet.length;elementID++){   //navigating through each element (pixel) in the pixelSet array
             boolean matchingRoot = false;
             if (roots.size() == 0 && find(pixelSet,elementID) != -1){   //if no elements have been added yet and pixel is not equal to -1
@@ -265,6 +270,13 @@ public class StartController {
         }
     }
 
+    private void identifyValidRoots(ArrayList<Integer> roots, ArrayList<Integer> validRoots, int[] pixelSet, int minSetSize){
+        for (Integer root : roots){
+            if (sizeOfSet(root, pixelSet) >= minSetSize)
+                validRoots.add(root);
+        }
+    }
+
     private int sizeOfSet(int root, int[] pixelSet){
             int noNodes = 0;
             for (int elementID=0;elementID< pixelSet.length;elementID++) {
@@ -274,7 +286,14 @@ public class StartController {
             return noNodes;
     }
 
-    private void drawRectangles(int[] pixelSet, ArrayList<Integer> roots, Image blackWhite, ArrayList<Integer> totalRoots){
+    private void identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, int icbCount){
+        if ((sat >= 0.2 && sat <= 0.45) && (bri >=0.1 && bri <= 0.35)){
+            icbCount = icbCount + validRoots.size();
+        }
+        System.out.println("No of ICBs: " + icbCount);
+    }
+
+    private void drawRectangles(int[] pixelSet, ArrayList<Integer> validRoots, Image blackWhite, ArrayList<Integer> totalRoots){
         //https://stackoverflow.com/questions/43260526/how-to-add-a-group-to-the-scene-in-javafx
         //https://stackoverflow.com/questions/34160639/add-shapes-to-javafx-pane-with-cartesian-coordinates
         //https://stackoverflow.com/questions/40729967/drawing-shapes-on-javafx-canvas
@@ -283,8 +302,7 @@ public class StartController {
 
         int width = (int) blackWhite.getWidth(), componentNo = totalRoots.size() + 1;   //increase for each component scanned
 
-        for (Integer currentRoot : roots) {  //for each root in array
-            if (sizeOfSet(currentRoot, pixelSet) >= minSetSize) {    //if set is greater than or equal to specified size
+        for (Integer currentRoot : validRoots) {  //for each root in array
                 boolean topLeft = false;    //for one time condition to obtain top left of each disjoint set
                 double x = 0, y = 0, l = 0, w = 0; //values for drawing rectangles
                 for (int elementID = 0; elementID < pixelSet.length; elementID++) {  //iterating through each pixel
@@ -326,7 +344,6 @@ public class StartController {
                 componentNo++;
                 componentsTextArea.appendText(tooltip.getText() + "\n\n");
             }
-        }
         ogImageViewPane.getChildren().add(root);
         totalComponentsLabel.setText("Total Components: " + (componentNo-1)); //componentNo iterates 1 above actual no of components
         //System.out.println(ogImageViewPane.getChildren());
