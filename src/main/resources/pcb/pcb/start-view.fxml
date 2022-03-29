@@ -51,7 +51,7 @@
                   <Label fx:id="satRangeLabel" layoutX="169.0" layoutY="164.0" text="0.32" AnchorPane.leftAnchor="169.0" AnchorPane.topAnchor="160.0" />
                   <Label fx:id="briRangeLabel" layoutX="169.0" layoutY="224.0" text="0.25" AnchorPane.leftAnchor="169.0" AnchorPane.topAnchor="220.0" />
                   <Button layoutX="143.0" layoutY="294.0" mnemonicParsing="false" onAction="#resetRangeValues" text="Reset" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="320.0" />
-                  <Spinner fx:id="minPixelSizeSpinner" initialValue="25" layoutX="20.0" layoutY="262.0" max="100000" min="0" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="280.0" />
+                  <Spinner fx:id="minPixelSizeSpinner" initialValue="55" layoutX="20.0" layoutY="262.0" max="100000" min="0" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="280.0" />
                   <Label layoutX="20.0" layoutY="263.0" text="Set Size Minimum (Pixel Units)" />
                </children></AnchorPane>
             <SplitPane orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0" SplitPane.resizableWithParent="false">
@@ -66,9 +66,9 @@
                                        <content>
                                           <AnchorPane prefHeight="200.0" prefWidth="200.0">
                                              <children>
-                                                <Pane fx:id="ogImageViewPane" layoutX="73.0" layoutY="162.0" prefHeight="340.0" prefWidth="453.0">
+                                                <Pane fx:id="ogImageViewPane" layoutX="49.0" layoutY="82.0" prefHeight="500.0" prefWidth="500.0">
                                                    <children>
-                                                      <ImageView fx:id="ogImageView" fitHeight="340.0" fitWidth="453.0" pickOnBounds="true" preserveRatio="true" />
+                                                      <ImageView fx:id="ogImageView" fitHeight="500.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true" />
                                                    </children>
                                                 </Pane>
                                              </children>
@@ -79,7 +79,7 @@
                                     <content>
                                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                                              <children>
-                                                <ImageView fx:id="newImageView" fitHeight="340.0" fitWidth="453.0" layoutX="73.0" layoutY="162.0" pickOnBounds="true" preserveRatio="true" />
+                                                <ImageView fx:id="newImageView" fitHeight="500.0" fitWidth="500.0" layoutX="49.0" layoutY="82.0" pickOnBounds="true" preserveRatio="true" />
                                              </children>
                                           </AnchorPane>
                                     </content>
