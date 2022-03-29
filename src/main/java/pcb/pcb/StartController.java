@@ -87,12 +87,9 @@ public class StartController {
             identifyRoots(pixelSet, roots);
             identifyValidRoots(roots,validRoots,pixelSet,minSetSize);
             validRoots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts validRoots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
-            //identifyComponentType(hue,sat,bri,roots,icbCount);
+            identifyComponentType(hue,sat,bri,validRoots);
             drawRectangles(pixelSet, validRoots, newImageView.getImage(), totalRoots);
-            for (Integer root : roots){
-                if (sizeOfSet(root, pixelSet) >= minSetSize)
-                    totalRoots.add(root);
-            }
+            totalRoots.addAll(validRoots);
         });
     }
 
@@ -286,11 +283,15 @@ public class StartController {
             return noNodes;
     }
 
-    private void identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, int icbCount){
+    private void identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots){
         if ((sat >= 0.2 && sat <= 0.45) && (bri >=0.1 && bri <= 0.35)){
-            icbCount = icbCount + validRoots.size();
+            icbCount += validRoots.size();
+        }else{
+            miscCount += validRoots.size();
         }
+        //todo: resistor
         System.out.println("No of ICBs: " + icbCount);
+        System.out.println("No of Misc: " + miscCount);
     }
 
     private void drawRectangles(int[] pixelSet, ArrayList<Integer> validRoots, Image blackWhite, ArrayList<Integer> totalRoots){
@@ -357,6 +358,7 @@ public class StartController {
             }
             totalRoots.clear();
             componentsTextArea.clear();
+            icbCount=0;resistorCount=0;miscCount=0;
             totalComponentsLabel.setText("Total Components: 0");
     }
 }
