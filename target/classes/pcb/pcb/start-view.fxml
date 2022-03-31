@@ -98,12 +98,32 @@
                                     <Insets left="10.0" top="5.0" />
                                  </FlowPane.margin>
                               </Label>
-                              <Label fx:id="totalComponentsLabel" text="Total Components: 0">
+                              <Label fx:id="totalComponentsLabel" prefHeight="17.0" prefWidth="246.0" text="Total Components: 0">
                                  <FlowPane.margin>
                                     <Insets left="10.0" />
                                  </FlowPane.margin>
                               </Label>
-                              <TextArea fx:id="componentsTextArea" editable="false" prefHeight="597.0" prefWidth="255.0" promptText="There's nothing here..." wrapText="true" />
+                              <Label fx:id="totalICBsLabel" prefHeight="17.0" prefWidth="246.0" text="ICBs: 0">
+                                 <FlowPane.margin>
+                                    <Insets left="10.0" />
+                                 </FlowPane.margin>
+                              </Label>
+                              <Label fx:id="totalResistorsLabel" prefHeight="17.0" prefWidth="246.0" text="Resistors: 0">
+                                 <FlowPane.margin>
+                                    <Insets left="10.0" />
+                                 </FlowPane.margin>
+                              </Label>
+                              <Label fx:id="totalSoldersLabel" prefHeight="17.0" prefWidth="246.0" text="Solder Points: 0">
+                                 <FlowPane.margin>
+                                    <Insets left="10.0" />
+                                 </FlowPane.margin>
+                              </Label>
+                              <Label fx:id="totalMiscLabel" prefHeight="17.0" prefWidth="246.0" text="Misc: 0">
+                                 <FlowPane.margin>
+                                    <Insets left="10.0" />
+                                 </FlowPane.margin>
+                              </Label>
+                              <TextArea fx:id="componentsTextArea" editable="false" prefHeight="578.0" prefWidth="255.0" promptText="There's nothing here..." wrapText="true" />
                            </children>
                         </FlowPane>
                     </items>
