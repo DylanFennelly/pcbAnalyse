@@ -288,6 +288,7 @@ public class StartController {
     }
 
     private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots) {
+        //todo: drop down menu/textfield to identify components
         //we assume that all components detected in click are similar and of the same type
         //resistor check, samples taken from pcb images in CA information PDF
         if((hue >= 20 && hue <= 40) && (sat >= 0.25 && sat <= 0.75) && (bri >= 0.65 && bri <= 0.9)) {
