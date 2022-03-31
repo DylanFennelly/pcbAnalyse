@@ -30,6 +30,7 @@ public class StartController {
     private final DecimalFormat df = new DecimalFormat("#.##");   //https://stackoverflow.com/questions/153724/how-to-round-a-number-to-n-decimal-places-in-java
     private int hueTolerance, minSetSize, icbCount, resistorCount, solderCount, miscCount;
     private double satTolerance, briTolerance;
+    private String componentType;
 
     @FXML
     private MenuBar menuBar;
@@ -80,7 +81,7 @@ public class StartController {
             identifyRoots(pixelSet, roots);
             identifyValidRoots(roots,validRoots,pixelSet,minSetSize);
             validRoots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts validRoots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
-            identifyComponentType(hue,sat,bri,validRoots);
+            componentType = identifyComponentType(hue,sat,bri,validRoots);
             drawRectangles(pixelSet, validRoots, newImageView.getImage(), totalRoots);
             totalRoots.addAll(validRoots);
 
@@ -286,26 +287,25 @@ public class StartController {
             return noNodes;
     }
 
-    private void identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots) {
+    private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots) {
         //we assume that all components detected in click are similar and of the same type
         //resistor check, samples taken from pcb images in CA information PDF
         if((hue >= 20 && hue <= 40) && (sat >= 0.25 && sat <= 0.75) && (bri >= 0.65 && bri <= 0.9)) {
             resistorCount += validRoots.size();
+            return "Resistor";
         //solder point check
         }else if((sat >= 0.02 && sat <= 0.1) && (bri >= 0.8 && bri <= 1) ){
             solderCount += validRoots.size();
+            return "Solder Point";
         //icb check
         }else if ((sat >= 0.025 && sat <= 0.45) && (bri >=0.1 && bri <= 0.35)){
             icbCount += validRoots.size();
+            return "ICB";
         //if component is not resistor, solder, or icb, mark as misc
         }else{
             miscCount += validRoots.size();
+            return "Misc.";
         }
-        //todo: resistor
-        System.out.println("No of ICBs: " + icbCount);
-        System.out.println("No of Resistors: " + resistorCount);
-        System.out.println("No of Solder Points: " + solderCount);
-        System.out.println("No of Misc: " + miscCount);
     }
 
     private void drawRectangles(int[] pixelSet, ArrayList<Integer> validRoots, Image blackWhite, ArrayList<Integer> totalRoots){
@@ -353,7 +353,7 @@ public class StartController {
                 Text number = new Text(x+2,y+8,""+componentNo);//draws a label with the componentNo in the top left of each rectangle
                 number.setFont(Font.font("Arial", FontWeight.NORMAL, FontPosture.REGULAR,10));  //https://www.tutorialspoint.com/how-to-add-stroke-and-color-to-text-in-javafx
                 number.setFill(Color.YELLOW);
-                Tooltip tooltip = new Tooltip("Component number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
+                Tooltip tooltip = new Tooltip("Component type: " + componentType + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
                 Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
                 root.getChildren().addAll(rect,number);
                 componentNo++;
