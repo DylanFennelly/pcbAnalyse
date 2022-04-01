@@ -28,6 +28,7 @@ public class StartController {
     private int[] pixelSet;
     private ArrayList<Integer> roots, validRoots, totalRoots = new ArrayList<>();   //totalRoots: ArrayList of roots across multiple
     private Image ogImg;
+    private WritableImage blackWhite;
     private final DecimalFormat df = new DecimalFormat("#.##");   //https://stackoverflow.com/questions/153724/how-to-round-a-number-to-n-decimal-places-in-java
     private int hueTolerance, minSetSize, icbCount, resistorCount, solderCount, miscCount;
     private double satTolerance, briTolerance;
@@ -80,7 +81,11 @@ public class StartController {
 
             System.out.println("\nHue: " + hue + "\nSaturation: " + sat + "\nBrightness: " + bri);
             setRangeValues();
-            isolateSelectedColour(col, pr, hue, sat, bri);
+            if (newImageView.getImage() == null)
+                isolateSelectedColour(col, pr, hue, sat, bri);
+            else
+                addSelectedColour(blackWhite, col, pr, hue, sat, bri);
+
             processImgToDisjoint(newImageView.getImage(), pixelSet);
             identifyRoots(pixelSet, roots);
             identifyValidRoots(roots,validRoots,pixelSet,minSetSize);
@@ -141,6 +146,7 @@ public class StartController {
             totalResistorsLabel.setText("Resistors: 0");
             totalSoldersLabel.setText("Solder Points: 0");
             totalMiscLabel.setText("Misc: 0");
+            newImageView.setImage(null);
             ogImageView.setImage(image);
         }
     }
@@ -161,7 +167,7 @@ public class StartController {
             increasedHue = (hue + hueTolerance) - 360;
             rollOver = true;
         }
-        WritableImage blackWhite = new WritableImage(width, height);
+        blackWhite = new WritableImage(width, height);
         System.out.println("hue: " + hue + " | reduced hue: " + reducedHue + " | increased hue: " + increasedHue);
 
         for (int y=0; y<height; y++){
@@ -194,6 +200,63 @@ public class StartController {
                 }else{
                     //else, set to white
                     blackWhite.getPixelWriter().setColor(x,y, new Color(1,1,1,1));
+                }
+            }
+        }
+        newImageView.setImage(blackWhite);
+    }
+
+    //version of method for adding additional pixels over already existing image
+    private void addSelectedColour(WritableImage blackWhite, Color selectedCol,PixelReader pixelReader, double hue, double sat, double bri){
+        boolean hueRange = false, satRange = false, briRange = false, rollOver = false, rollUnder = false;
+        int width = (int) ogImageView.getImage().getWidth();
+        int height = (int) ogImageView.getImage().getHeight();
+        double reducedHue = hue - hueTolerance, increasedHue = hue + hueTolerance, reducedSat = sat - satTolerance, increasedSat = sat + satTolerance, reducedBri = bri - briTolerance, increasedBri = bri + briTolerance;
+        //ensuring that the hue values correctly roll over
+        if (reducedHue < 0) {
+            reducedHue = 360 + (hue - hueTolerance);
+            rollUnder = true;
+        }
+
+        if (increasedHue > 360) {
+            increasedHue = (hue + hueTolerance) - 360;
+            rollOver = true;
+        }
+        System.out.println("hue: " + hue + " | reduced hue: " + reducedHue + " | increased hue: " + increasedHue);
+
+        for (int y=0; y<height; y++){
+            for (int x=0; x<width; x++) {
+                //if pixel at index is not already black from previous click
+                if (!Objects.equals(blackWhite.getPixelReader().getColor(x, y), new Color(0, 0, 0, 1))) {
+                    if (pixelReader.getColor(x, y).getHue() >= (360 - hueTolerance)) {    //for hue values on the upper border
+                        if (rollUnder) {     //if reduced hue value rolled under to 350's
+                            hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue); //check only if hue is greater than rolled-under reduced value.
+                        } else if (rollOver) {
+                            hueRange = (pixelReader.getColor(x, y).getHue() <= 360);
+                        } else {      //if no roll under occurred
+                            hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
+                        }
+                    } else if (pixelReader.getColor(x, y).getHue() <= hueTolerance) { //for hue values on the lower border
+                        if (rollOver) { //if increase hue valued rolled over to single digits
+                            hueRange = (pixelReader.getColor(x, y).getHue() <= increasedHue); //check only if hue is less than rolled-over increased value.
+                        } else if (rollUnder) {
+                            hueRange = (pixelReader.getColor(x, y).getHue() >= 0);
+                        } else {      //if no roll over occurred
+                            hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
+                        }
+                    } else { //for values not on either border (the nice values)
+                        hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);
+                    }
+                    satRange = ((pixelReader.getColor(x, y).getSaturation() >= reducedSat) && (pixelReader.getColor(x, y).getSaturation() <= increasedSat));
+                    briRange = ((pixelReader.getColor(x, y).getBrightness() >= reducedBri) && (pixelReader.getColor(x, y).getBrightness() <= increasedBri));
+
+                    if (hueRange && satRange && briRange) {
+                        //if within range, set to black
+                        blackWhite.getPixelWriter().setColor(x, y, new Color(0, 0, 0, 1));
+                    } else {
+                        //else, set to white
+                        blackWhite.getPixelWriter().setColor(x, y, new Color(1, 1, 1, 1));
+                    }
                 }
             }
         }
@@ -395,6 +458,7 @@ public class StartController {
             totalResistorsLabel.setText("Resistors: 0");
             totalSoldersLabel.setText("Solder Points: 0");
             totalMiscLabel.setText("Misc: 0");
+            newImageView.setImage(null);
         }
     }
 }
