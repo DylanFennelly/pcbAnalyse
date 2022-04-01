@@ -20,6 +20,7 @@ import java.io.File;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class StartController {
     //todo: remove noise from blackWhite image
@@ -54,6 +55,9 @@ public class StartController {
     private TextArea componentsTextArea;
 
     @FXML
+    private ChoiceBox<String> componentTypeChoiceBox;
+
+    @FXML
     private void initialize(){
         df.setRoundingMode(RoundingMode.CEILING);
         //updating slider labels upon moving sliders    |   https://stackoverflow.com/questions/40593284/how-can-i-define-a-method-for-slider-change-in-controller-of-a-javafx-program
@@ -81,7 +85,8 @@ public class StartController {
             identifyRoots(pixelSet, roots);
             identifyValidRoots(roots,validRoots,pixelSet,minSetSize);
             validRoots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts validRoots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
-            componentType = identifyComponentType(hue,sat,bri,validRoots);
+            String componentTypeSelection = componentTypeChoiceBox.getValue();
+            componentType = identifyComponentType(hue,sat,bri,validRoots, componentTypeSelection);
             drawRectangles(pixelSet, validRoots, newImageView.getImage(), totalRoots);
             totalRoots.addAll(validRoots);
 
@@ -287,26 +292,34 @@ public class StartController {
             return noNodes;
     }
 
-    private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots) {
-        //todo: drop down menu/textfield to identify components
-        //we assume that all components detected in click are similar and of the same type
-        //resistor check, samples taken from pcb images in CA information PDF
-        if((hue >= 20 && hue <= 40) && (sat >= 0.25 && sat <= 0.75) && (bri >= 0.65 && bri <= 0.9)) {
-            resistorCount += validRoots.size();
-            return "Resistor";
-        //solder point check
-        }else if((sat >= 0.02 && sat <= 0.1) && (bri >= 0.8 && bri <= 1) ){
-            solderCount += validRoots.size();
-            return "Solder Point";
-        //icb check
-        }else if ((sat >= 0.025 && sat <= 0.45) && (bri >=0.1 && bri <= 0.35)){
-            icbCount += validRoots.size();
-            return "ICB";
-        //if component is not resistor, solder, or icb, mark as misc
-        }else{
-            miscCount += validRoots.size();
-            return "Misc.";
+    private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, String componentTypeSelection) {
+        switch (componentTypeSelection){
+            case "ICB" -> { icbCount += validRoots.size(); return "ICB";}
+            case "Resistor" -> { resistorCount += validRoots.size(); return "Resistor";}
+            case "Solder Point" -> { solderCount += validRoots.size(); return "Solder Point";}
+            case "Misc." -> { miscCount += validRoots.size(); return "Misc.";}
+            default -> {
+                //we assume that all components detected in click are similar and of the same type
+                //resistor check, samples taken from pcb images in CA information PDF
+                if ((hue >= 20 && hue <= 40) && (sat >= 0.25 && sat <= 0.75) && (bri >= 0.65 && bri <= 0.9)) {
+                    resistorCount += validRoots.size();
+                    return "Resistor";
+                    //solder point check
+                } else if ((sat >= 0.02 && sat <= 0.1) && (bri >= 0.8 && bri <= 1)) {
+                    solderCount += validRoots.size();
+                    return "Solder Point";
+                    //icb check
+                } else if ((sat >= 0.025 && sat <= 0.45) && (bri >= 0.1 && bri <= 0.35)) {
+                    icbCount += validRoots.size();
+                    return "ICB";
+                    //if component is not resistor, solder, or icb, mark as misc
+                } else {
+                    miscCount += validRoots.size();
+                    return "Misc.";
+                }
+            }
         }
+
     }
 
     private void drawRectangles(int[] pixelSet, ArrayList<Integer> validRoots, Image blackWhite, ArrayList<Integer> totalRoots){
