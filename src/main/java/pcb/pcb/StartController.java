@@ -20,19 +20,21 @@ import java.io.File;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class StartController {
     //todo: remove noise from blackWhite image
     //todo: array of only valid roots
     private int[] pixelSet;
-    private ArrayList<Integer> roots, validRoots, totalRoots = new ArrayList<>();   //totalRoots: ArrayList of roots across multiple
+    private ArrayList<Integer> roots, validRoots;
     private Image ogImg;
     private WritableImage blackWhite;
     private final DecimalFormat df = new DecimalFormat("#.##");   //https://stackoverflow.com/questions/153724/how-to-round-a-number-to-n-decimal-places-in-java
     private int hueTolerance, minSetSize, icbCount, resistorCount, solderCount, miscCount;
     private double satTolerance, briTolerance;
     private String componentType;
+    private HashMap<Integer, String> existingComponentTypes = new HashMap<>();    //storing component types for existing components to prevent component types being overwritten
 
     @FXML
     private MenuBar menuBar;
@@ -92,8 +94,7 @@ public class StartController {
             validRoots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts validRoots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
             String componentTypeSelection = componentTypeChoiceBox.getValue();
             componentType = identifyComponentType(hue,sat,bri,validRoots, componentTypeSelection);
-            drawRectangles(pixelSet, validRoots, newImageView.getImage(), totalRoots);
-            totalRoots.addAll(validRoots);
+            drawRectangles(pixelSet, validRoots, newImageView.getImage(), existingComponentTypes);
 
             totalICBsLabel.setText("ICBs: " + icbCount);
             totalResistorsLabel.setText("Resistors: " + resistorCount);
@@ -136,7 +137,6 @@ public class StartController {
             if (ogImageViewPane.getChildren().size() == 2)  //removing existing rectangles from image if they exist rectangle group is second child of ogImageViewPane)
                 ogImageViewPane.getChildren().remove(1);
             pixelSet = new int[(int) (image.getWidth() * image.getHeight())];
-            totalRoots.clear();     //empty total roots
             componentsTextArea.clear();
             removeRectangles();
 
@@ -148,6 +148,7 @@ public class StartController {
             totalMiscLabel.setText("Misc: 0");
             newImageView.setImage(null);
             ogImageView.setImage(image);
+            existingComponentTypes.clear();
         }
     }
 
@@ -356,6 +357,7 @@ public class StartController {
     }
 
     private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, String componentTypeSelection) {
+        //todo fix
         resistorCount=0;solderCount=0;icbCount=0;miscCount=0;
         switch (componentTypeSelection){
             case "ICB" -> { icbCount += validRoots.size(); return "ICB";}
@@ -386,12 +388,13 @@ public class StartController {
 
     }
 
-    private void drawRectangles(int[] pixelSet, ArrayList<Integer> validRoots, Image blackWhite, ArrayList<Integer> totalRoots){
+    private void drawRectangles(int[] pixelSet, ArrayList<Integer> validRoots, Image blackWhite, HashMap<Integer, String> existingComponentTypes){
         //https://stackoverflow.com/questions/43260526/how-to-add-a-group-to-the-scene-in-javafx
         //https://stackoverflow.com/questions/34160639/add-shapes-to-javafx-pane-with-cartesian-coordinates
         //https://stackoverflow.com/questions/40729967/drawing-shapes-on-javafx-canvas
 
         Group root = new Group();   //creating group of nodes to add to pane
+        componentsTextArea.clear();
 
         int width = (int) blackWhite.getWidth(), componentNo = 1;   //increase for each component scanned
 
@@ -432,11 +435,21 @@ public class StartController {
                 number.setFont(Font.font("Arial", FontWeight.NORMAL, FontPosture.REGULAR,10));  //https://www.tutorialspoint.com/how-to-add-stroke-and-color-to-text-in-javafx
                 number.setFill(Color.YELLOW);
                 //todo: way to protect existing component type labels
-                Tooltip tooltip = new Tooltip("Component type: " + componentType + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
-                Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
-                root.getChildren().addAll(rect,number);
-                componentNo++;
-                componentsTextArea.appendText(tooltip.getText() + "\n\n");
+                if (!existingComponentTypes.containsKey(currentRoot)) {
+                    Tooltip tooltip = new Tooltip("Component type: " + componentType + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
+                    Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
+                    root.getChildren().addAll(rect, number);
+                    componentNo++;
+                    componentsTextArea.appendText(tooltip.getText() + "\n\n");
+
+                    existingComponentTypes.put(currentRoot, componentType);
+                }else{
+                    Tooltip tooltip = new Tooltip("Component type: " + existingComponentTypes.get(currentRoot) + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
+                    Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
+                    root.getChildren().addAll(rect, number);
+                    componentNo++;
+                    componentsTextArea.appendText(tooltip.getText() + "\n\n");
+                }
             }
         if (ogImageViewPane.getChildren().size() == 2){
             ogImageViewPane.getChildren().remove(1);
@@ -450,7 +463,6 @@ public class StartController {
     private void removeRectangles(){
         if (ogImageViewPane.getChildren().size() == 2) {
             ogImageViewPane.getChildren().remove(1);    //removing existing rectangles from image if they exist
-            totalRoots.clear();
             componentsTextArea.clear();
             icbCount = 0;
             resistorCount = 0;
@@ -462,6 +474,7 @@ public class StartController {
             totalSoldersLabel.setText("Solder Points: 0");
             totalMiscLabel.setText("Misc: 0");
             newImageView.setImage(null);
+            existingComponentTypes.clear();
         }
     }
 }
