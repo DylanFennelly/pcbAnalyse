@@ -356,6 +356,7 @@ public class StartController {
     }
 
     private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, String componentTypeSelection) {
+        resistorCount=0;solderCount=0;icbCount=0;miscCount=0;
         switch (componentTypeSelection){
             case "ICB" -> { icbCount += validRoots.size(); return "ICB";}
             case "Resistor" -> { resistorCount += validRoots.size(); return "Resistor";}
@@ -392,7 +393,7 @@ public class StartController {
 
         Group root = new Group();   //creating group of nodes to add to pane
 
-        int width = (int) blackWhite.getWidth(), componentNo = totalRoots.size() + 1;   //increase for each component scanned
+        int width = (int) blackWhite.getWidth(), componentNo = 1;   //increase for each component scanned
 
         for (Integer currentRoot : validRoots) {  //for each root in array
                 boolean topLeft = false;    //for one time condition to obtain top left of each disjoint set
@@ -430,12 +431,16 @@ public class StartController {
                 Text number = new Text(x+2,y+8,""+componentNo);//draws a label with the componentNo in the top left of each rectangle
                 number.setFont(Font.font("Arial", FontWeight.NORMAL, FontPosture.REGULAR,10));  //https://www.tutorialspoint.com/how-to-add-stroke-and-color-to-text-in-javafx
                 number.setFill(Color.YELLOW);
+                //todo: way to protect existing component type labels
                 Tooltip tooltip = new Tooltip("Component type: " + componentType + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
                 Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
                 root.getChildren().addAll(rect,number);
                 componentNo++;
                 componentsTextArea.appendText(tooltip.getText() + "\n\n");
             }
+        if (ogImageViewPane.getChildren().size() == 2){
+            ogImageViewPane.getChildren().remove(1);
+        }
         ogImageViewPane.getChildren().add(root);
         totalComponentsLabel.setText("Total Components: " + (componentNo-1)); //componentNo iterates 1 above actual no of components
         //System.out.println(ogImageViewPane.getChildren());
@@ -443,10 +448,8 @@ public class StartController {
 
     @FXML
     private void removeRectangles(){
-        if (ogImageViewPane.getChildren().size() > 1) {  //removing existing rectangles from image if they exist
-            for (int i = ogImageViewPane.getChildren().size() - 1; i > 0; i--) {
-                ogImageViewPane.getChildren().remove(i);
-            }
+        if (ogImageViewPane.getChildren().size() == 2) {
+            ogImageViewPane.getChildren().remove(1);    //removing existing rectangles from image if they exist
             totalRoots.clear();
             componentsTextArea.clear();
             icbCount = 0;
