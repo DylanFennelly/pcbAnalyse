@@ -1,16 +1,12 @@
 package pcb.pcb;
 
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
-import javafx.scene.layout.Border;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -19,14 +15,12 @@ import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 import java.io.File;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.Objects;
 
 public class StartController {
     //todo: remove noise from blackWhite image
@@ -35,8 +29,9 @@ public class StartController {
     private ArrayList<Integer> roots, validRoots, totalRoots = new ArrayList<>();   //totalRoots: ArrayList of roots across multiple
     private Image ogImg;
     private final DecimalFormat df = new DecimalFormat("#.##");   //https://stackoverflow.com/questions/153724/how-to-round-a-number-to-n-decimal-places-in-java
-    private int hueTolerance, minSetSize, icbCount, resistorCount, miscCount;
+    private int hueTolerance, minSetSize, icbCount, resistorCount, solderCount, miscCount;
     private double satTolerance, briTolerance;
+    private String componentType;
 
     @FXML
     private MenuBar menuBar;
@@ -48,7 +43,7 @@ public class StartController {
     private Pane ogImageViewPane;
 
     @FXML
-    private Label satRangeLabel, briRangeLabel, totalComponentsLabel;
+    private Label satRangeLabel, briRangeLabel, totalComponentsLabel, totalICBsLabel, totalResistorsLabel, totalMiscLabel, totalSoldersLabel;
 
     @FXML
     private Slider satRangeSlider, briRangeSlider;
@@ -58,6 +53,9 @@ public class StartController {
 
     @FXML
     private TextArea componentsTextArea;
+
+    @FXML
+    private ChoiceBox<String> componentTypeChoiceBox;
 
     @FXML
     private void initialize(){
@@ -87,12 +85,15 @@ public class StartController {
             identifyRoots(pixelSet, roots);
             identifyValidRoots(roots,validRoots,pixelSet,minSetSize);
             validRoots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts validRoots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
-            //identifyComponentType(hue,sat,bri,roots,icbCount);
+            String componentTypeSelection = componentTypeChoiceBox.getValue();
+            componentType = identifyComponentType(hue,sat,bri,validRoots, componentTypeSelection);
             drawRectangles(pixelSet, validRoots, newImageView.getImage(), totalRoots);
-            for (Integer root : roots){
-                if (sizeOfSet(root, pixelSet) >= minSetSize)
-                    totalRoots.add(root);
-            }
+            totalRoots.addAll(validRoots);
+
+            totalICBsLabel.setText("ICBs: " + icbCount);
+            totalResistorsLabel.setText("Resistors: " + resistorCount);
+            totalSoldersLabel.setText("Solder Points: " + solderCount);
+            totalMiscLabel.setText("Misc: " + miscCount);
         });
     }
 
@@ -134,8 +135,12 @@ public class StartController {
             componentsTextArea.clear();
             removeRectangles();
 
-            icbCount = 0; resistorCount = 0; miscCount = 0;
+            icbCount = 0; resistorCount = 0; miscCount = 0; solderCount = 0;
             totalComponentsLabel.setText("Total Components: 0");
+            totalICBsLabel.setText("ICBs: 0");
+            totalResistorsLabel.setText("Resistors: 0");
+            totalSoldersLabel.setText("Solder Points: 0");
+            totalMiscLabel.setText("Misc: 0");
             ogImageView.setImage(image);
         }
     }
@@ -232,6 +237,7 @@ public class StartController {
     }
 
     public static void union(int index, int[] pixelSet, double width){
+        //todo: fix issue of sets of right of screen connecting to sets on left of screen
         //checking pixel to right
         if (!(index + 1 > pixelSet.length -1)) {
             if (pixelSet[index + 1] != -1) {
@@ -286,11 +292,34 @@ public class StartController {
             return noNodes;
     }
 
-    private void identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, int icbCount){
-        if ((sat >= 0.2 && sat <= 0.45) && (bri >=0.1 && bri <= 0.35)){
-            icbCount = icbCount + validRoots.size();
+    private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, String componentTypeSelection) {
+        switch (componentTypeSelection){
+            case "ICB" -> { icbCount += validRoots.size(); return "ICB";}
+            case "Resistor" -> { resistorCount += validRoots.size(); return "Resistor";}
+            case "Solder Point" -> { solderCount += validRoots.size(); return "Solder Point";}
+            case "Misc." -> { miscCount += validRoots.size(); return "Misc.";}
+            default -> {
+                //we assume that all components detected in click are similar and of the same type
+                //resistor check, samples taken from pcb images in CA information PDF
+                if ((hue >= 20 && hue <= 40) && (sat >= 0.25 && sat <= 0.75) && (bri >= 0.65 && bri <= 0.9)) {
+                    resistorCount += validRoots.size();
+                    return "Resistor";
+                    //solder point check
+                } else if ((sat >= 0.02 && sat <= 0.1) && (bri >= 0.8 && bri <= 1)) {
+                    solderCount += validRoots.size();
+                    return "Solder Point";
+                    //icb check
+                } else if ((sat >= 0.025 && sat <= 0.45) && (bri >= 0.1 && bri <= 0.35)) {
+                    icbCount += validRoots.size();
+                    return "ICB";
+                    //if component is not resistor, solder, or icb, mark as misc
+                } else {
+                    miscCount += validRoots.size();
+                    return "Misc.";
+                }
+            }
         }
-        System.out.println("No of ICBs: " + icbCount);
+
     }
 
     private void drawRectangles(int[] pixelSet, ArrayList<Integer> validRoots, Image blackWhite, ArrayList<Integer> totalRoots){
@@ -338,7 +367,7 @@ public class StartController {
                 Text number = new Text(x+2,y+8,""+componentNo);//draws a label with the componentNo in the top left of each rectangle
                 number.setFont(Font.font("Arial", FontWeight.NORMAL, FontPosture.REGULAR,10));  //https://www.tutorialspoint.com/how-to-add-stroke-and-color-to-text-in-javafx
                 number.setFill(Color.YELLOW);
-                Tooltip tooltip = new Tooltip("Component number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
+                Tooltip tooltip = new Tooltip("Component type: " + componentType + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
                 Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
                 root.getChildren().addAll(rect,number);
                 componentNo++;
@@ -351,12 +380,21 @@ public class StartController {
 
     @FXML
     private void removeRectangles(){
-        if (ogImageViewPane.getChildren().size() > 1)  //removing existing rectangles from image if they exist
-            for (int i = ogImageViewPane.getChildren().size()-1; i > 0; i--) {
+        if (ogImageViewPane.getChildren().size() > 1) {  //removing existing rectangles from image if they exist
+            for (int i = ogImageViewPane.getChildren().size() - 1; i > 0; i--) {
                 ogImageViewPane.getChildren().remove(i);
             }
             totalRoots.clear();
             componentsTextArea.clear();
+            icbCount = 0;
+            resistorCount = 0;
+            solderCount = 0;
+            miscCount = 0;
             totalComponentsLabel.setText("Total Components: 0");
+            totalICBsLabel.setText("ICBs: 0");
+            totalResistorsLabel.setText("Resistors: 0");
+            totalSoldersLabel.setText("Solder Points: 0");
+            totalMiscLabel.setText("Misc: 0");
+        }
     }
 }
