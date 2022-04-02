@@ -1,5 +1,6 @@
 package pcb.pcb;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Group;
 import javafx.scene.control.*;
@@ -16,6 +17,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 
+import javax.swing.*;
 import java.io.File;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -27,6 +29,7 @@ import java.util.Random;
 public class StartController {
     //todo: remove noise from blackWhite image
     //todo: array of only valid roots
+    private JFrame frame; //used for popup windows
     private int[] pixelSet;
     private ArrayList<Integer> roots, validRoots;
     private Image ogImg;
@@ -121,6 +124,14 @@ public class StartController {
         briRangeSlider.setValue(0.25);
         briRangeLabel.setText("0.25");
         minPixelSizeSpinner.getValueFactory().setValue(55);
+    }
+
+    @FXML
+    protected void exitApp(ActionEvent actionEvent){
+        int option = JOptionPane.showConfirmDialog(frame, "Are you sure you want to exit the application?", "Exit Confirmation", JOptionPane.YES_NO_OPTION);
+        if (option == JOptionPane.YES_OPTION){
+            System.exit(0); //https://stackoverflow.com/questions/22452930/terminating-a-java-program
+        }
     }
 
     @FXML

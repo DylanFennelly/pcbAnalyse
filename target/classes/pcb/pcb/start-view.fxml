@@ -30,7 +30,7 @@
             <items>
               <MenuItem mnemonicParsing="false" onAction="#openImage" text="Open Image..." />
                   <MenuItem fx:id="closeImageOption" disable="true" mnemonicParsing="false" text="Close Image" />
-                  <MenuItem mnemonicParsing="false" text="Exit Application" />
+                  <MenuItem mnemonicParsing="false" onAction="#exitApp" text="Exit Application" />
             </items>
           </Menu>
         </menus>
