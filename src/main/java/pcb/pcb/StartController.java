@@ -126,6 +126,20 @@ public class StartController {
         minPixelSizeSpinner.getValueFactory().setValue(55);
     }
 
+    private void resetCounts(){ //resets component counters and labels
+        icbCount = 0; resistorCount = 0; miscCount = 0; solderCount = 0;
+        totalComponentsLabel.setText("Total Components: 0");
+        totalICBsLabel.setText("ICBs: 0");
+        totalResistorsLabel.setText("Resistors: 0");
+        totalSoldersLabel.setText("Solder Points: 0");
+        totalMiscLabel.setText("Misc: 0");
+    }
+    private void resetImageViews(){
+        newImageView.setImage(null);
+        sampledImageView.setImage(null);
+        randomImageView.setImage(null);
+    }
+
     @FXML
     protected void exitApp(ActionEvent actionEvent){
         int option = JOptionPane.showConfirmDialog(frame, "Are you sure you want to exit the application?", "Exit Confirmation", JOptionPane.YES_NO_OPTION);
@@ -154,15 +168,8 @@ public class StartController {
             componentsTextArea.clear();
             removeRectangles();
 
-            icbCount = 0; resistorCount = 0; miscCount = 0; solderCount = 0;
-            totalComponentsLabel.setText("Total Components: 0");
-            totalICBsLabel.setText("ICBs: 0");
-            totalResistorsLabel.setText("Resistors: 0");
-            totalSoldersLabel.setText("Solder Points: 0");
-            totalMiscLabel.setText("Misc: 0");
-            newImageView.setImage(null);
-            sampledImageView.setImage(null);
-            randomImageView.setImage(null);
+            resetCounts();
+            resetImageViews();
             ogImageView.setImage(image);
             existingComponentTypes.clear();
         }
@@ -331,8 +338,7 @@ public class StartController {
         }
     }
 
-    //Iterative version of find
-    public static int find(int[] a, int id) {
+    public static int find(int[] a, int id) {   //finds the root of an input id
         if (a[id] != -1) {
             while (a[id] != id)
                 id = a[id];
@@ -352,7 +358,6 @@ public class StartController {
         if (!(index + width > pixelSet.length -1)) {
             //checking pixel below
             if (pixelSet[(int) (index + width)] != -1) {
-                // pixelSet[(int) (index + width)] = index;
                 pixelSet[find(pixelSet, (int) (index + width))] = find(pixelSet,index);
             }
         }
@@ -409,7 +414,6 @@ public class StartController {
     }
 
     private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, String componentTypeSelection, HashMap<Integer, String> existingComponentTypes) {
-        //todo fix
         switch (componentTypeSelection){
             case "ICB" -> { icbCount += validRoots.size() - existingComponentTypes.size() ; return "ICB";}
             case "Resistor" -> { resistorCount += validRoots.size() - existingComponentTypes.size(); return "Resistor";}
@@ -477,16 +481,17 @@ public class StartController {
                         }
                     }
                 }
-                //todo: move stuff to method(s)
+
                 Rectangle rect = new Rectangle(x, y, l, w);
                 rect.setFill(Color.TRANSPARENT);
                 rect.setStroke(Color.RED);
                 rect.setStrokeWidth(2.0);
+
                 Text number = new Text(x+2,y+8,""+componentNo);//draws a label with the componentNo in the top left of each rectangle
                 number.setFont(Font.font("Arial", FontWeight.NORMAL, FontPosture.REGULAR,10));  //https://www.tutorialspoint.com/how-to-add-stroke-and-color-to-text-in-javafx
                 number.setFill(Color.YELLOW);
-                //todo: way to protect existing component type labels
-                if (!existingComponentTypes.containsKey(currentRoot)) {
+
+                if (!existingComponentTypes.containsKey(currentRoot)) {     //if root has not been recorded in hashmap yet
                     Tooltip tooltip = new Tooltip("Component type: " + componentType + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
                     Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
                     root.getChildren().addAll(rect, number);
@@ -507,26 +512,17 @@ public class StartController {
         }
         ogImageViewPane.getChildren().add(root);
         totalComponentsLabel.setText("Total Components: " + (icbCount + resistorCount + solderCount + miscCount)); //componentNo iterates 1 above actual no of components
-        //System.out.println(ogImageViewPane.getChildren());
     }
+
+
 
     @FXML
     private void removeRectangles(){
         if (ogImageViewPane.getChildren().size() == 2) {
             ogImageViewPane.getChildren().remove(1);    //removing existing rectangles from image if they exist
             componentsTextArea.clear();
-            icbCount = 0;
-            resistorCount = 0;
-            solderCount = 0;
-            miscCount = 0;
-            totalComponentsLabel.setText("Total Components: 0");
-            totalICBsLabel.setText("ICBs: 0");
-            totalResistorsLabel.setText("Resistors: 0");
-            totalSoldersLabel.setText("Solder Points: 0");
-            totalMiscLabel.setText("Misc: 0");
-            newImageView.setImage(null);
-            sampledImageView.setImage(null);
-            randomImageView.setImage(null);
+            resetCounts();
+            resetImageViews();
             existingComponentTypes.clear();
         }
     }
