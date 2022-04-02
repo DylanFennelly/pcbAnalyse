@@ -29,7 +29,7 @@ public class StartController {
     private int[] pixelSet;
     private ArrayList<Integer> roots, validRoots;
     private Image ogImg;
-    private WritableImage blackWhite;
+    private WritableImage blackWhite, sampled, random;
     private final DecimalFormat df = new DecimalFormat("#.##");   //https://stackoverflow.com/questions/153724/how-to-round-a-number-to-n-decimal-places-in-java
     private int hueTolerance, minSetSize, icbCount, resistorCount, solderCount, miscCount;
     private double satTolerance, briTolerance;
@@ -40,7 +40,7 @@ public class StartController {
     private MenuBar menuBar;
 
     @FXML
-    private ImageView ogImageView, newImageView;
+    private ImageView ogImageView, newImageView, sampledImageView, randomImageView;
 
     @FXML
     private Pane ogImageViewPane;
@@ -86,17 +86,15 @@ public class StartController {
             if (newImageView.getImage() == null)
                 isolateSelectedColour(col, pr, hue, sat, bri);
             else
-                addSelectedColour(blackWhite, col, pr, hue, sat, bri);
+                addSelectedColour(blackWhite, sampled, col, pr, hue, sat, bri);
 
             processImgToDisjoint(newImageView.getImage(), pixelSet);
             identifyRoots(pixelSet, roots);
             identifyValidRoots(roots,validRoots,pixelSet,minSetSize);
             validRoots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts validRoots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
             String componentTypeSelection = componentTypeChoiceBox.getValue();
-            if (validRoots.size() != existingComponentTypes.size()){    //if valid roots and hashmap differ in size
-                cleanUpExistingComponentsHashMap(existingComponentTypes, validRoots);
-            }
-            componentType = identifyComponentType(hue,sat,bri,validRoots, componentTypeSelection);
+            cleanUpExistingComponentsHashMap(existingComponentTypes, validRoots);
+            componentType = identifyComponentType(hue,sat,bri,validRoots, componentTypeSelection, existingComponentTypes);
             drawRectangles(pixelSet, validRoots, newImageView.getImage(), existingComponentTypes);
 
             totalICBsLabel.setText("ICBs: " + icbCount);
@@ -150,6 +148,8 @@ public class StartController {
             totalSoldersLabel.setText("Solder Points: 0");
             totalMiscLabel.setText("Misc: 0");
             newImageView.setImage(null);
+            sampledImageView.setImage(null);
+            randomImageView.setImage(null);
             ogImageView.setImage(image);
             existingComponentTypes.clear();
         }
@@ -172,6 +172,7 @@ public class StartController {
             rollOver = true;
         }
         blackWhite = new WritableImage(width, height);
+        sampled = new WritableImage(width, height);
         System.out.println("hue: " + hue + " | reduced hue: " + reducedHue + " | increased hue: " + increasedHue);
 
         for (int y=0; y<height; y++){
@@ -201,17 +202,20 @@ public class StartController {
                 if (hueRange && satRange && briRange){
                     //if within range, set to black
                     blackWhite.getPixelWriter().setColor(x,y,new Color(0,0,0,1));
+                    sampled.getPixelWriter().setColor(x,y,selectedCol);
                 }else{
                     //else, set to white
                     blackWhite.getPixelWriter().setColor(x,y, new Color(1,1,1,1));
+                    sampled.getPixelWriter().setColor(x,y, new Color(1,1,1,1));
                 }
             }
         }
         newImageView.setImage(blackWhite);
+        sampledImageView.setImage(sampled);
     }
 
     //version of method for adding additional pixels over already existing image
-    private void addSelectedColour(WritableImage blackWhite, Color selectedCol,PixelReader pixelReader, double hue, double sat, double bri){
+    private void addSelectedColour(WritableImage blackWhite, WritableImage sampled, Color selectedCol,PixelReader pixelReader, double hue, double sat, double bri){
         boolean hueRange = false, satRange = false, briRange = false, rollOver = false, rollUnder = false;
         int width = (int) ogImageView.getImage().getWidth();
         int height = (int) ogImageView.getImage().getHeight();
@@ -257,9 +261,11 @@ public class StartController {
                     if (hueRange && satRange && briRange) {
                         //if within range, set to black
                         blackWhite.getPixelWriter().setColor(x, y, new Color(0, 0, 0, 1));
+                        sampled.getPixelWriter().setColor(x,y,selectedCol);
                     } else {
                         //else, set to white
                         blackWhite.getPixelWriter().setColor(x, y, new Color(1, 1, 1, 1));
+                        sampled.getPixelWriter().setColor(x,y,new Color(1, 1, 1, 1));
                     }
                 }
             }
@@ -370,7 +376,7 @@ public class StartController {
             existingComponentTypes.remove(key);
     }
 
-    private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, String componentTypeSelection) {
+    private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, String componentTypeSelection, HashMap<Integer, String> existingComponentTypes) {
         //todo fix
         switch (componentTypeSelection){
             case "ICB" -> { icbCount += validRoots.size() - existingComponentTypes.size() ; return "ICB";}
@@ -487,6 +493,8 @@ public class StartController {
             totalSoldersLabel.setText("Solder Points: 0");
             totalMiscLabel.setText("Misc: 0");
             newImageView.setImage(null);
+            sampledImageView.setImage(null);
+            randomImageView.setImage(null);
             existingComponentTypes.clear();
         }
     }
