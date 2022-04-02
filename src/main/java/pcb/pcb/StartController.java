@@ -22,6 +22,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Random;
 
 public class StartController {
     //todo: remove noise from blackWhite image
@@ -92,6 +93,7 @@ public class StartController {
             identifyRoots(pixelSet, roots);
             identifyValidRoots(roots,validRoots,pixelSet,minSetSize);
             validRoots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts validRoots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
+            randomColours(random,validRoots,pixelSet);
             String componentTypeSelection = componentTypeChoiceBox.getValue();
             cleanUpExistingComponentsHashMap(existingComponentTypes, validRoots);
             componentType = identifyComponentType(hue,sat,bri,validRoots, componentTypeSelection, existingComponentTypes);
@@ -173,6 +175,7 @@ public class StartController {
         }
         blackWhite = new WritableImage(width, height);
         sampled = new WritableImage(width, height);
+        random = new WritableImage(width, height);
         System.out.println("hue: " + hue + " | reduced hue: " + reducedHue + " | increased hue: " + increasedHue);
 
         for (int y=0; y<height; y++){
@@ -202,6 +205,7 @@ public class StartController {
                 if (hueRange && satRange && briRange){
                     //if within range, set to black
                     blackWhite.getPixelWriter().setColor(x,y,new Color(0,0,0,1));
+                    random.getPixelWriter().setColor(x,y,new Color(0,0,0,1));//initialise random with black and white pixels, same as blackWhite
                     sampled.getPixelWriter().setColor(x,y,selectedCol);
                 }else{
                     //else, set to white
@@ -212,6 +216,7 @@ public class StartController {
         }
         newImageView.setImage(blackWhite);
         sampledImageView.setImage(sampled);
+        randomImageView.setImage(random);
     }
 
     //version of method for adding additional pixels over already existing image
@@ -262,15 +267,31 @@ public class StartController {
                         //if within range, set to black
                         blackWhite.getPixelWriter().setColor(x, y, new Color(0, 0, 0, 1));
                         sampled.getPixelWriter().setColor(x,y,selectedCol);
+                        random.getPixelWriter().setColor(x, y, new Color(0, 0, 0, 1));
                     } else {
                         //else, set to white
                         blackWhite.getPixelWriter().setColor(x, y, new Color(1, 1, 1, 1));
                         sampled.getPixelWriter().setColor(x,y,new Color(1, 1, 1, 1));
+                        random.getPixelWriter().setColor(x, y, new Color(1, 1, 1, 1));
                     }
                 }
             }
         }
-        newImageView.setImage(blackWhite);
+    }
+
+    private void randomColours(WritableImage random, ArrayList<Integer> validRoots, int[] pixelSet){
+        int x, y;
+        Random rand = new Random();
+        for (Integer root : validRoots) {
+            float r = rand.nextFloat(), g = rand.nextFloat(), b = rand.nextFloat();   //generating values for a random colour per each root
+                    for (int index = 0; index < pixelSet.length; index++) {//index in pixel set
+                        if (find(pixelSet, index) == root) { //if current pixel is black and root of pixel is the current root
+                            x = (int) (index % random.getWidth());      // remainder of current index divided by width
+                            y = (int) Math.floor(index / random.getWidth());  //always rounds down (https://docs.oracle.com/javase/7/docs/api/java/lang/Math.html#floor%28double%29)
+                            random.getPixelWriter().setColor(x, y, new Color(r, g, b, 1));
+                        }
+                    }
+        }
     }
 
     private void processImgToDisjoint(Image blackWhite, int[] pixelSet){    //processing the b&w image to a disjoint set
