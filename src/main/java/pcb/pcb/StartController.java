@@ -27,8 +27,6 @@ import java.util.Objects;
 import java.util.Random;
 
 public class StartController {
-    //todo: remove noise from blackWhite image
-    //todo: array of only valid roots
     private JFrame frame; //used for popup windows
     private int[] pixelSet;
     private ArrayList<Integer> roots, validRoots;
@@ -176,7 +174,6 @@ public class StartController {
     }
 
     private void isolateSelectedColour(Color selectedCol,PixelReader pixelReader, double hue, double sat, double bri){
-        //todo: modulo for overflow
         boolean hueRange = false, satRange = false, briRange = false, rollOver = false, rollUnder = false;
         int width = (int) ogImageView.getImage().getWidth();
         int height = (int) ogImageView.getImage().getHeight();
@@ -348,9 +345,8 @@ public class StartController {
     }
 
     public static void union(int index, int[] pixelSet, double width){
-        //todo: fix issue of sets of right of screen connecting to sets on left of screen
         //checking pixel to right
-        if (!(index + 1 > pixelSet.length -1)) {
+        if (!(index + 1 > pixelSet.length -1) && (((index +1) % (int)width) != 0)) {    //if index mod 500 + 1 is not equal to 0 (i.e. if next pixel doenst loop over to left of image)
             if (pixelSet[index + 1] != -1) {
                 pixelSet[find(pixelSet,index + 1)] = find(pixelSet,index);
             }
@@ -493,7 +489,7 @@ public class StartController {
 
                 if (!existingComponentTypes.containsKey(currentRoot)) {     //if root has not been recorded in hashmap yet
                     Tooltip tooltip = new Tooltip("Component type: " + componentType + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
-                    Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
+                    Tooltip.install(rect, tooltip);     //https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
                     root.getChildren().addAll(rect, number);
                     componentNo++;
                     componentsTextArea.appendText(tooltip.getText() + "\n\n");
@@ -501,7 +497,7 @@ public class StartController {
                     existingComponentTypes.put(currentRoot, componentType);
                 }else{
                     Tooltip tooltip = new Tooltip("Component type: " + existingComponentTypes.get(currentRoot) + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
-                    Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
+                    Tooltip.install(rect, tooltip);     //https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
                     root.getChildren().addAll(rect, number);
                     componentNo++;
                     componentsTextArea.appendText(tooltip.getText() + "\n\n");
