@@ -93,6 +93,9 @@ public class StartController {
             identifyValidRoots(roots,validRoots,pixelSet,minSetSize);
             validRoots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts validRoots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
             String componentTypeSelection = componentTypeChoiceBox.getValue();
+            if (validRoots.size() != existingComponentTypes.size()){    //if valid roots and hashmap differ in size
+                cleanUpExistingComponentsHashMap(existingComponentTypes, validRoots);
+            }
             componentType = identifyComponentType(hue,sat,bri,validRoots, componentTypeSelection);
             drawRectangles(pixelSet, validRoots, newImageView.getImage(), existingComponentTypes);
 
@@ -356,31 +359,41 @@ public class StartController {
             return noNodes;
     }
 
+    private void cleanUpExistingComponentsHashMap(HashMap<Integer, String> existingComponentTypes, ArrayList<Integer> validRoots){  //cleans up hashmap to remove roots that no longer exist, thanks to two roots combining into one set when b/w images are merged
+        ArrayList<Integer> keysToRemove = new ArrayList<>();     //preventing ConcurrentModificationException from altering hashMap while iterating over it
+        for (var key : existingComponentTypes.entrySet()){      //var: https://stackoverflow.com/questions/46898/how-do-i-efficiently-iterate-over-each-entry-in-a-java-map
+            if (!validRoots.contains(key.getKey())){        //if key(root in hashmap) no longer exists in validRoots, remove from hashmap
+                keysToRemove.add(key.getKey());
+            }
+        }
+        for (Integer key : keysToRemove)
+            existingComponentTypes.remove(key);
+    }
+
     private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, String componentTypeSelection) {
         //todo fix
-        resistorCount=0;solderCount=0;icbCount=0;miscCount=0;
         switch (componentTypeSelection){
-            case "ICB" -> { icbCount += validRoots.size(); return "ICB";}
-            case "Resistor" -> { resistorCount += validRoots.size(); return "Resistor";}
-            case "Solder Point" -> { solderCount += validRoots.size(); return "Solder Point";}
-            case "Misc." -> { miscCount += validRoots.size(); return "Misc.";}
+            case "ICB" -> { icbCount += validRoots.size() - existingComponentTypes.size() ; return "ICB";}
+            case "Resistor" -> { resistorCount += validRoots.size() - existingComponentTypes.size(); return "Resistor";}
+            case "Solder Point" -> { solderCount += validRoots.size() - existingComponentTypes.size(); return "Solder Point";}
+            case "Misc." -> { miscCount += validRoots.size() - existingComponentTypes.size(); return "Misc.";}
             default -> {
                 //we assume that all components detected in click are similar and of the same type
                 //resistor check, samples taken from pcb images in CA information PDF
                 if ((hue >= 20 && hue <= 40) && (sat >= 0.25 && sat <= 0.75) && (bri >= 0.65 && bri <= 0.9)) {
-                    resistorCount += validRoots.size();
+                    resistorCount += validRoots.size() - existingComponentTypes.size();
                     return "Resistor";
                     //solder point check
                 } else if ((sat >= 0.02 && sat <= 0.1) && (bri >= 0.8 && bri <= 1)) {
-                    solderCount += validRoots.size();
+                    solderCount += validRoots.size() - existingComponentTypes.size();
                     return "Solder Point";
                     //icb check
                 } else if ((sat >= 0.025 && sat <= 0.45) && (bri >= 0.1 && bri <= 0.35)) {
-                    icbCount += validRoots.size();
+                    icbCount += validRoots.size() - existingComponentTypes.size();
                     return "ICB";
                     //if component is not resistor, solder, or icb, mark as misc
                 } else {
-                    miscCount += validRoots.size();
+                    miscCount += validRoots.size() - existingComponentTypes.size();
                     return "Misc.";
                 }
             }
@@ -455,7 +468,7 @@ public class StartController {
             ogImageViewPane.getChildren().remove(1);
         }
         ogImageViewPane.getChildren().add(root);
-        totalComponentsLabel.setText("Total Components: " + (componentNo-1)); //componentNo iterates 1 above actual no of components
+        totalComponentsLabel.setText("Total Components: " + (icbCount + resistorCount + solderCount + miscCount)); //componentNo iterates 1 above actual no of components
         //System.out.println(ogImageViewPane.getChildren());
     }
 
