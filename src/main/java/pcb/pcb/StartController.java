@@ -20,24 +20,28 @@ import java.io.File;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
+import java.util.Random;
 
 public class StartController {
     //todo: remove noise from blackWhite image
     //todo: array of only valid roots
     private int[] pixelSet;
-    private ArrayList<Integer> roots, validRoots, totalRoots = new ArrayList<>();   //totalRoots: ArrayList of roots across multiple
+    private ArrayList<Integer> roots, validRoots;
     private Image ogImg;
+    private WritableImage blackWhite, sampled, random;
     private final DecimalFormat df = new DecimalFormat("#.##");   //https://stackoverflow.com/questions/153724/how-to-round-a-number-to-n-decimal-places-in-java
     private int hueTolerance, minSetSize, icbCount, resistorCount, solderCount, miscCount;
     private double satTolerance, briTolerance;
     private String componentType;
+    private HashMap<Integer, String> existingComponentTypes = new HashMap<>();    //storing component types for existing components to prevent component types being overwritten
 
     @FXML
     private MenuBar menuBar;
 
     @FXML
-    private ImageView ogImageView, newImageView;
+    private ImageView ogImageView, newImageView, sampledImageView, randomImageView;
 
     @FXML
     private Pane ogImageViewPane;
@@ -80,15 +84,20 @@ public class StartController {
 
             System.out.println("\nHue: " + hue + "\nSaturation: " + sat + "\nBrightness: " + bri);
             setRangeValues();
-            isolateSelectedColour(col, pr, hue, sat, bri);
+            if (newImageView.getImage() == null)
+                isolateSelectedColour(col, pr, hue, sat, bri);
+            else
+                addSelectedColour(blackWhite, sampled, col, pr, hue, sat, bri);
+
             processImgToDisjoint(newImageView.getImage(), pixelSet);
             identifyRoots(pixelSet, roots);
             identifyValidRoots(roots,validRoots,pixelSet,minSetSize);
             validRoots.sort((Integer root1, Integer root2) -> Integer.compare(sizeOfSet(root2, pixelSet), sizeOfSet(root1, pixelSet)));  //sorts validRoots ArrayList in descending order by size of set  |  IntelliJ improvements from https://stackoverflow.com/questions/16751540/sorting-an-object-arraylist-by-an-attribute-value-in-java#comment62928013_16751550
+            randomColours(random,validRoots,pixelSet);
             String componentTypeSelection = componentTypeChoiceBox.getValue();
-            componentType = identifyComponentType(hue,sat,bri,validRoots, componentTypeSelection);
-            drawRectangles(pixelSet, validRoots, newImageView.getImage(), totalRoots);
-            totalRoots.addAll(validRoots);
+            cleanUpExistingComponentsHashMap(existingComponentTypes, validRoots);
+            componentType = identifyComponentType(hue,sat,bri,validRoots, componentTypeSelection, existingComponentTypes);
+            drawRectangles(pixelSet, validRoots, newImageView.getImage(), existingComponentTypes);
 
             totalICBsLabel.setText("ICBs: " + icbCount);
             totalResistorsLabel.setText("Resistors: " + resistorCount);
@@ -131,7 +140,6 @@ public class StartController {
             if (ogImageViewPane.getChildren().size() == 2)  //removing existing rectangles from image if they exist rectangle group is second child of ogImageViewPane)
                 ogImageViewPane.getChildren().remove(1);
             pixelSet = new int[(int) (image.getWidth() * image.getHeight())];
-            totalRoots.clear();     //empty total roots
             componentsTextArea.clear();
             removeRectangles();
 
@@ -141,7 +149,11 @@ public class StartController {
             totalResistorsLabel.setText("Resistors: 0");
             totalSoldersLabel.setText("Solder Points: 0");
             totalMiscLabel.setText("Misc: 0");
+            newImageView.setImage(null);
+            sampledImageView.setImage(null);
+            randomImageView.setImage(null);
             ogImageView.setImage(image);
+            existingComponentTypes.clear();
         }
     }
 
@@ -161,7 +173,9 @@ public class StartController {
             increasedHue = (hue + hueTolerance) - 360;
             rollOver = true;
         }
-        WritableImage blackWhite = new WritableImage(width, height);
+        blackWhite = new WritableImage(width, height);
+        sampled = new WritableImage(width, height);
+        random = new WritableImage(width, height);
         System.out.println("hue: " + hue + " | reduced hue: " + reducedHue + " | increased hue: " + increasedHue);
 
         for (int y=0; y<height; y++){
@@ -191,13 +205,93 @@ public class StartController {
                 if (hueRange && satRange && briRange){
                     //if within range, set to black
                     blackWhite.getPixelWriter().setColor(x,y,new Color(0,0,0,1));
+                    random.getPixelWriter().setColor(x,y,new Color(0,0,0,1));//initialise random with black and white pixels, same as blackWhite
+                    sampled.getPixelWriter().setColor(x,y,selectedCol);
                 }else{
                     //else, set to white
                     blackWhite.getPixelWriter().setColor(x,y, new Color(1,1,1,1));
+                    sampled.getPixelWriter().setColor(x,y, new Color(1,1,1,1));
                 }
             }
         }
         newImageView.setImage(blackWhite);
+        sampledImageView.setImage(sampled);
+        randomImageView.setImage(random);
+    }
+
+    //version of method for adding additional pixels over already existing image
+    private void addSelectedColour(WritableImage blackWhite, WritableImage sampled, Color selectedCol,PixelReader pixelReader, double hue, double sat, double bri){
+        boolean hueRange = false, satRange = false, briRange = false, rollOver = false, rollUnder = false;
+        int width = (int) ogImageView.getImage().getWidth();
+        int height = (int) ogImageView.getImage().getHeight();
+        double reducedHue = hue - hueTolerance, increasedHue = hue + hueTolerance, reducedSat = sat - satTolerance, increasedSat = sat + satTolerance, reducedBri = bri - briTolerance, increasedBri = bri + briTolerance;
+        //ensuring that the hue values correctly roll over
+        if (reducedHue < 0) {
+            reducedHue = 360 + (hue - hueTolerance);
+            rollUnder = true;
+        }
+
+        if (increasedHue > 360) {
+            increasedHue = (hue + hueTolerance) - 360;
+            rollOver = true;
+        }
+        System.out.println("hue: " + hue + " | reduced hue: " + reducedHue + " | increased hue: " + increasedHue);
+
+        for (int y=0; y<height; y++){
+            for (int x=0; x<width; x++) {
+                //if pixel at index is not already black from previous click
+                if (!Objects.equals(blackWhite.getPixelReader().getColor(x, y), new Color(0, 0, 0, 1))) {
+                    if (pixelReader.getColor(x, y).getHue() >= (360 - hueTolerance)) {    //for hue values on the upper border
+                        if (rollUnder) {     //if reduced hue value rolled under to 350's
+                            hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue); //check only if hue is greater than rolled-under reduced value.
+                        } else if (rollOver) {
+                            hueRange = (pixelReader.getColor(x, y).getHue() <= 360);
+                        } else {      //if no roll under occurred
+                            hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
+                        }
+                    } else if (pixelReader.getColor(x, y).getHue() <= hueTolerance) { //for hue values on the lower border
+                        if (rollOver) { //if increase hue valued rolled over to single digits
+                            hueRange = (pixelReader.getColor(x, y).getHue() <= increasedHue); //check only if hue is less than rolled-over increased value.
+                        } else if (rollUnder) {
+                            hueRange = (pixelReader.getColor(x, y).getHue() >= 0);
+                        } else {      //if no roll over occurred
+                            hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
+                        }
+                    } else { //for values not on either border (the nice values)
+                        hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);
+                    }
+                    satRange = ((pixelReader.getColor(x, y).getSaturation() >= reducedSat) && (pixelReader.getColor(x, y).getSaturation() <= increasedSat));
+                    briRange = ((pixelReader.getColor(x, y).getBrightness() >= reducedBri) && (pixelReader.getColor(x, y).getBrightness() <= increasedBri));
+
+                    if (hueRange && satRange && briRange) {
+                        //if within range, set to black
+                        blackWhite.getPixelWriter().setColor(x, y, new Color(0, 0, 0, 1));
+                        sampled.getPixelWriter().setColor(x,y,selectedCol);
+                        random.getPixelWriter().setColor(x, y, new Color(0, 0, 0, 1));
+                    } else {
+                        //else, set to white
+                        blackWhite.getPixelWriter().setColor(x, y, new Color(1, 1, 1, 1));
+                        sampled.getPixelWriter().setColor(x,y,new Color(1, 1, 1, 1));
+                        random.getPixelWriter().setColor(x, y, new Color(1, 1, 1, 1));
+                    }
+                }
+            }
+        }
+    }
+
+    private void randomColours(WritableImage random, ArrayList<Integer> validRoots, int[] pixelSet){
+        int x, y;
+        Random rand = new Random();
+        for (Integer root : validRoots) {
+            float r = rand.nextFloat(), g = rand.nextFloat(), b = rand.nextFloat();   //generating values for a random colour per each root
+                    for (int index = 0; index < pixelSet.length; index++) {//index in pixel set
+                        if (find(pixelSet, index) == root) { //if current pixel is black and root of pixel is the current root
+                            x = (int) (index % random.getWidth());      // remainder of current index divided by width
+                            y = (int) Math.floor(index / random.getWidth());  //always rounds down (https://docs.oracle.com/javase/7/docs/api/java/lang/Math.html#floor%28double%29)
+                            random.getPixelWriter().setColor(x, y, new Color(r, g, b, 1));
+                        }
+                    }
+        }
     }
 
     private void processImgToDisjoint(Image blackWhite, int[] pixelSet){    //processing the b&w image to a disjoint set
@@ -292,29 +386,41 @@ public class StartController {
             return noNodes;
     }
 
-    private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, String componentTypeSelection) {
+    private void cleanUpExistingComponentsHashMap(HashMap<Integer, String> existingComponentTypes, ArrayList<Integer> validRoots){  //cleans up hashmap to remove roots that no longer exist, thanks to two roots combining into one set when b/w images are merged
+        ArrayList<Integer> keysToRemove = new ArrayList<>();     //preventing ConcurrentModificationException from altering hashMap while iterating over it
+        for (var key : existingComponentTypes.entrySet()){      //var: https://stackoverflow.com/questions/46898/how-do-i-efficiently-iterate-over-each-entry-in-a-java-map
+            if (!validRoots.contains(key.getKey())){        //if key(root in hashmap) no longer exists in validRoots, remove from hashmap
+                keysToRemove.add(key.getKey());
+            }
+        }
+        for (Integer key : keysToRemove)
+            existingComponentTypes.remove(key);
+    }
+
+    private String identifyComponentType(double hue, double sat, double bri, ArrayList<Integer> validRoots, String componentTypeSelection, HashMap<Integer, String> existingComponentTypes) {
+        //todo fix
         switch (componentTypeSelection){
-            case "ICB" -> { icbCount += validRoots.size(); return "ICB";}
-            case "Resistor" -> { resistorCount += validRoots.size(); return "Resistor";}
-            case "Solder Point" -> { solderCount += validRoots.size(); return "Solder Point";}
-            case "Misc." -> { miscCount += validRoots.size(); return "Misc.";}
+            case "ICB" -> { icbCount += validRoots.size() - existingComponentTypes.size() ; return "ICB";}
+            case "Resistor" -> { resistorCount += validRoots.size() - existingComponentTypes.size(); return "Resistor";}
+            case "Solder Point" -> { solderCount += validRoots.size() - existingComponentTypes.size(); return "Solder Point";}
+            case "Misc." -> { miscCount += validRoots.size() - existingComponentTypes.size(); return "Misc.";}
             default -> {
                 //we assume that all components detected in click are similar and of the same type
                 //resistor check, samples taken from pcb images in CA information PDF
                 if ((hue >= 20 && hue <= 40) && (sat >= 0.25 && sat <= 0.75) && (bri >= 0.65 && bri <= 0.9)) {
-                    resistorCount += validRoots.size();
+                    resistorCount += validRoots.size() - existingComponentTypes.size();
                     return "Resistor";
                     //solder point check
                 } else if ((sat >= 0.02 && sat <= 0.1) && (bri >= 0.8 && bri <= 1)) {
-                    solderCount += validRoots.size();
+                    solderCount += validRoots.size() - existingComponentTypes.size();
                     return "Solder Point";
                     //icb check
                 } else if ((sat >= 0.025 && sat <= 0.45) && (bri >= 0.1 && bri <= 0.35)) {
-                    icbCount += validRoots.size();
+                    icbCount += validRoots.size() - existingComponentTypes.size();
                     return "ICB";
                     //if component is not resistor, solder, or icb, mark as misc
                 } else {
-                    miscCount += validRoots.size();
+                    miscCount += validRoots.size() - existingComponentTypes.size();
                     return "Misc.";
                 }
             }
@@ -322,14 +428,15 @@ public class StartController {
 
     }
 
-    private void drawRectangles(int[] pixelSet, ArrayList<Integer> validRoots, Image blackWhite, ArrayList<Integer> totalRoots){
+    private void drawRectangles(int[] pixelSet, ArrayList<Integer> validRoots, Image blackWhite, HashMap<Integer, String> existingComponentTypes){
         //https://stackoverflow.com/questions/43260526/how-to-add-a-group-to-the-scene-in-javafx
         //https://stackoverflow.com/questions/34160639/add-shapes-to-javafx-pane-with-cartesian-coordinates
         //https://stackoverflow.com/questions/40729967/drawing-shapes-on-javafx-canvas
 
         Group root = new Group();   //creating group of nodes to add to pane
+        componentsTextArea.clear();
 
-        int width = (int) blackWhite.getWidth(), componentNo = totalRoots.size() + 1;   //increase for each component scanned
+        int width = (int) blackWhite.getWidth(), componentNo = 1;   //increase for each component scanned
 
         for (Integer currentRoot : validRoots) {  //for each root in array
                 boolean topLeft = false;    //for one time condition to obtain top left of each disjoint set
@@ -367,24 +474,35 @@ public class StartController {
                 Text number = new Text(x+2,y+8,""+componentNo);//draws a label with the componentNo in the top left of each rectangle
                 number.setFont(Font.font("Arial", FontWeight.NORMAL, FontPosture.REGULAR,10));  //https://www.tutorialspoint.com/how-to-add-stroke-and-color-to-text-in-javafx
                 number.setFill(Color.YELLOW);
-                Tooltip tooltip = new Tooltip("Component type: " + componentType + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
-                Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
-                root.getChildren().addAll(rect,number);
-                componentNo++;
-                componentsTextArea.appendText(tooltip.getText() + "\n\n");
+                //todo: way to protect existing component type labels
+                if (!existingComponentTypes.containsKey(currentRoot)) {
+                    Tooltip tooltip = new Tooltip("Component type: " + componentType + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
+                    Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
+                    root.getChildren().addAll(rect, number);
+                    componentNo++;
+                    componentsTextArea.appendText(tooltip.getText() + "\n\n");
+
+                    existingComponentTypes.put(currentRoot, componentType);
+                }else{
+                    Tooltip tooltip = new Tooltip("Component type: " + existingComponentTypes.get(currentRoot) + "\nComponent number: " + componentNo + "\nEstimated size (pixel units): " + sizeOfSet(currentRoot, pixelSet));
+                    Tooltip.install(rect, tooltip);     ////https://openjfx.io/javadoc/13/javafx.controls/javafx/scene/control/Tooltip.html
+                    root.getChildren().addAll(rect, number);
+                    componentNo++;
+                    componentsTextArea.appendText(tooltip.getText() + "\n\n");
+                }
             }
+        if (ogImageViewPane.getChildren().size() == 2){
+            ogImageViewPane.getChildren().remove(1);
+        }
         ogImageViewPane.getChildren().add(root);
-        totalComponentsLabel.setText("Total Components: " + (componentNo-1)); //componentNo iterates 1 above actual no of components
+        totalComponentsLabel.setText("Total Components: " + (icbCount + resistorCount + solderCount + miscCount)); //componentNo iterates 1 above actual no of components
         //System.out.println(ogImageViewPane.getChildren());
     }
 
     @FXML
     private void removeRectangles(){
-        if (ogImageViewPane.getChildren().size() > 1) {  //removing existing rectangles from image if they exist
-            for (int i = ogImageViewPane.getChildren().size() - 1; i > 0; i--) {
-                ogImageViewPane.getChildren().remove(i);
-            }
-            totalRoots.clear();
+        if (ogImageViewPane.getChildren().size() == 2) {
+            ogImageViewPane.getChildren().remove(1);    //removing existing rectangles from image if they exist
             componentsTextArea.clear();
             icbCount = 0;
             resistorCount = 0;
@@ -395,6 +513,10 @@ public class StartController {
             totalResistorsLabel.setText("Resistors: 0");
             totalSoldersLabel.setText("Solder Points: 0");
             totalMiscLabel.setText("Misc: 0");
+            newImageView.setImage(null);
+            sampledImageView.setImage(null);
+            randomImageView.setImage(null);
+            existingComponentTypes.clear();
         }
     }
 }
