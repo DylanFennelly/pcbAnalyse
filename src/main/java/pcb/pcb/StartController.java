@@ -363,7 +363,7 @@ public class StartController {
         }
     }
 
-    private void identifyRoots(int[] pixelSet, ArrayList<Integer> roots) {
+    public void identifyRoots(int[] pixelSet, ArrayList<Integer> roots) {
         for (int elementID = 0; elementID < pixelSet.length; elementID++) {   //navigating through each element (pixel) in the pixelSet array
             boolean matchingRoot = false;
             if (roots.size() == 0 && find(pixelSet, elementID) != -1) {   //if no elements have been added yet and pixel is not equal to -1
@@ -402,7 +402,7 @@ public class StartController {
         return noNodes;
     }
 
-    private void cleanUpExistingComponentsHashMap(HashMap<Integer, String> existingComponentTypes, ArrayList<Integer> validRoots) {  //cleans up hashmap to remove roots that no longer exist, thanks to two roots combining into one set when b/w images are merged
+    public void cleanUpExistingComponentsHashMap(HashMap<Integer, String> existingComponentTypes, ArrayList<Integer> validRoots) {  //cleans up hashmap to remove roots that no longer exist, thanks to two roots combining into one set when b/w images are merged
         ArrayList<Integer> keysToRemove = new ArrayList<>();     //preventing ConcurrentModificationException from altering hashMap while iterating over it
         for (var key : existingComponentTypes.entrySet()) {      //var: https://stackoverflow.com/questions/46898/how-do-i-efficiently-iterate-over-each-entry-in-a-java-map
             if (!validRoots.contains(key.getKey())) {        //if key(root in hashmap) no longer exists in validRoots, remove from hashmap
