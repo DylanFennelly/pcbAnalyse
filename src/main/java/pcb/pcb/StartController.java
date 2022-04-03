@@ -298,6 +298,33 @@ public class StartController {
         }
     }
 
+    public boolean colourRangeTrails(PixelReader pixelReader, int x, int y, int hueTolerance, boolean rollUnder, boolean rollOver, double increasedHue, double reducedHue, double increasedSat, double reducedSat, double increasedBri, double reducedBri){
+        boolean hueRange, satRange, briRange;
+        if (pixelReader.getColor(x, y).getHue() >= (360 - hueTolerance)) {    //for hue values on the upper border
+            if (rollUnder) {     //if reduced hue value rolled under to 350's
+                hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue); //check only if hue is greater than rolled-under reduced value.
+            } else if (rollOver) {
+                hueRange = (pixelReader.getColor(x, y).getHue() <= 360);
+            } else {      //if no roll under occurred
+                hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
+            }
+        } else if (pixelReader.getColor(x, y).getHue() <= hueTolerance) { //for hue values on the lower border
+            if (rollOver) { //if increase hue valued rolled over to single digits
+                hueRange = (pixelReader.getColor(x, y).getHue() <= increasedHue); //check only if hue is less than rolled-over increased value.
+            } else if (rollUnder) {
+                hueRange = (pixelReader.getColor(x, y).getHue() >= 0);
+            } else {      //if no roll over occurred
+                hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
+            }
+        } else { //for values not on either border (the nice values)
+            hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);
+        }
+        satRange = ((pixelReader.getColor(x, y).getSaturation() >= reducedSat) && (pixelReader.getColor(x, y).getSaturation() <= increasedSat));
+        briRange = ((pixelReader.getColor(x, y).getBrightness() >= reducedBri) && (pixelReader.getColor(x, y).getBrightness() <= increasedBri));
+
+        return (hueRange && satRange && briRange);
+    }
+
     private void randomColours(WritableImage random, ArrayList<Integer> validRoots, int[] pixelSet) {
         int x, y;
         Random rand = new Random();
