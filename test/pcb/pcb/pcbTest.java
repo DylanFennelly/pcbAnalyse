@@ -122,6 +122,5 @@ class pcbTest {
         assertEquals(3,existingComponentTypes.size());
     }
 
-    @Test
 
 }
