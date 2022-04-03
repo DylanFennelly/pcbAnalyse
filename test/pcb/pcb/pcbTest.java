@@ -1,22 +1,15 @@
 package pcb.pcb;
 
-import javafx.scene.image.Image;
-import javafx.scene.layout.Pane;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-
-import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class pcbTest {
-
-    private Pane pane = new Pane();
     private int[] pixelSet, pixelSet2;
     private double width;
-    private Image blackWhite;
     private StartController startController;
 
     @BeforeEach
@@ -34,8 +27,6 @@ class pcbTest {
 
         width=4;
 
-        blackWhite = new Image("pcb/pcb/testBlackWhite.png");
-        pixelSet2 = new int[(int) (blackWhite.getHeight() * blackWhite.getWidth())];
         startController = new StartController();
     }
 
@@ -72,9 +63,5 @@ class pcbTest {
         StartController.union(15,pixelSet,width);
     }
 
-     @Test
-    void processImgToDisjointTest(){
-            startController.processImgToDisjoint(blackWhite,pixelSet2);
-     }
 
 }
