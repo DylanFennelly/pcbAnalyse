@@ -1,6 +1,7 @@
 package pcb.pcb;
 
 
+import javafx.scene.paint.Color;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -122,5 +123,53 @@ class pcbTest {
         assertEquals(3,existingComponentTypes.size());
     }
 
+    //extracted version of colourRangeTrials method with only hue check and pixelReader removed, as I could not get JavaFX tests working
+    private boolean HueRangeTrailsAlt(Color color, int hueTolerance, boolean rollUnder, boolean rollOver, double increasedHue, double reducedHue){
+        boolean hueRange;
+        if (color.getHue() >= (360 - hueTolerance)) {    //for hue values on the upper border
+            if (rollUnder) {     //if reduced hue value rolled under to 350's
+                hueRange = (color.getHue() >= reducedHue); //check only if hue is greater than rolled-under reduced value.
+            } else if (rollOver) {
+                hueRange = (color.getHue() <= 360);
+            } else {      //if no roll under occurred
+                hueRange = (color.getHue() >= reducedHue) && (color.getHue() <= increasedHue);    //check as normal
+            }
+        } else if (color.getHue() <= hueTolerance) { //for hue values on the lower border
+            if (rollOver) { //if increase hue valued rolled over to single digits
+                hueRange = (color.getHue() <= increasedHue); //check only if hue is less than rolled-over increased value.
+            } else if (rollUnder) {
+                hueRange = (color.getHue() >= 0);
+            } else {      //if no roll over occurred
+                hueRange = (color.getHue() >= reducedHue) && (color.getHue() <= increasedHue);    //check as normal
+            }
+        } else { //for values not on either border (the nice values)
+            hueRange = (color.getHue() >= reducedHue) && (color.getHue() <= increasedHue);
+        }
+        return (hueRange);
+    }
 
+    @Test
+    void colourRangeTrialsTest() {
+        //GREEN Hue = 120 (Normal); RED hue = 0 (low hue); CRIMSON = 348 (high hue); BLUE = 240
+
+        //Normal colour, inside valid range
+        assertTrue(HueRangeTrailsAlt(Color.GREEN,20, false, false,  140, 100));
+        //Normal colour, outside valid range
+        assertFalse(HueRangeTrailsAlt(Color.GREEN,20, false, false,  200, 160));
+
+        //High hue, roll under
+        assertTrue (HueRangeTrailsAlt(Color.CRIMSON,40, true, false,  20, 300));
+        //High hue, roll over
+        assertTrue (HueRangeTrailsAlt(Color.CRIMSON,40, false, true,  0, 320));
+
+        //Low hue, roll under
+        assertTrue (HueRangeTrailsAlt(Color.RED,40, true, false,  60, 340));
+        //Low hue, roll over
+        assertTrue (HueRangeTrailsAlt(Color.RED,60, false, true, 20 , 280));
+
+        //outside valid range, roll under
+        assertFalse (HueRangeTrailsAlt(Color.BLUE,40, true, false,  60, 340));
+        //outside valid range, roll over
+        assertFalse (HueRangeTrailsAlt(Color.BLUE,60, false, true, 20 , 280));
+    }
 }
