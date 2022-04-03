@@ -47,7 +47,7 @@ public class StartController {
     private Pane ogImageViewPane;
 
     @FXML
-    private Label satRangeLabel, briRangeLabel, totalComponentsLabel, totalICBsLabel, totalResistorsLabel, totalMiscLabel, totalSoldersLabel;
+    private Label satRangeLabel, briRangeLabel, totalComponentsLabel, totalICBsLabel, totalResistorsLabel, totalMiscLabel, totalSoldersLabel, openImageLabelMain, openImageLabelBW, openImageLabelSampled, openImageLabelRandom, adviceTextLabel;
 
     @FXML
     private Slider satRangeSlider, briRangeSlider;
@@ -83,7 +83,6 @@ public class StartController {
             roots = new ArrayList<>();
             validRoots = new ArrayList<>(); //creating flexible arrayList to keep track of roots and validRoots (roots over minimum set size limit)
 
-            System.out.println("\nHue: " + hue + "\nSaturation: " + sat + "\nBrightness: " + bri);
             setRangeValues();
             if (newImageView.getImage() == null)
                 isolateSelectedColour(col, pr, hue, sat, bri);
@@ -159,7 +158,6 @@ public class StartController {
         fileChooser.getExtensionFilters().add(imgFilter);
         File imageFile = fileChooser.showOpenDialog(menuBar.getScene().getWindow()); //https://stackoverflow.com/questions/25491732/how-do-i-open-the-javafx-filechooser-from-a-controller-class
 
-        System.out.println(imageFile);
         if (imageFile != null) {
             Image image = new Image(imageFile.toURI().toString(), ogImageView.getFitWidth(), ogImageView.getFitHeight(), true, true);
             ogImageViewPane.setPrefWidth(image.getWidth());
@@ -174,6 +172,11 @@ public class StartController {
             resetImageViews();
             ogImageView.setImage(image);
             existingComponentTypes.clear();
+            openImageLabelMain.setDisable(true);
+            openImageLabelBW.setDisable(true);
+            openImageLabelSampled.setDisable(true);
+            openImageLabelRandom.setDisable(true);
+            adviceTextLabel.setVisible(true);
         }
     }
 
@@ -195,7 +198,6 @@ public class StartController {
         blackWhite = new WritableImage(width, height);
         sampled = new WritableImage(width, height);
         random = new WritableImage(width, height);
-        System.out.println("hue: " + hue + " | reduced hue: " + reducedHue + " | increased hue: " + increasedHue);
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -234,7 +236,6 @@ public class StartController {
             increasedHue = (hue + hueTolerance) - 360;
             rollOver = true;
         }
-        System.out.println("hue: " + hue + " | reduced hue: " + reducedHue + " | increased hue: " + increasedHue);
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -459,7 +460,6 @@ public class StartController {
                     if (!topLeft) {   //if topLeft pixel has not been defined
                         x = elementID % width;      // remainder of current index divided by width
                         y = Math.floor(elementID / width);  //always rounds down (https://docs.oracle.com/javase/7/docs/api/java/lang/Math.html#floor%28double%29)
-                        //System.out.println("Top Left of disjoint: " + x + " , " + y);
                         topLeft = true;
 
                     } else {
