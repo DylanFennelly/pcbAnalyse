@@ -178,7 +178,7 @@ public class StartController {
     }
 
     private void isolateSelectedColour(Color selectedCol, PixelReader pixelReader, double hue, double sat, double bri) {
-        boolean hueRange, satRange, briRange, rollOver = false, rollUnder = false;
+        boolean hueRange, satRange, briRange, similarColour, rollOver = false, rollUnder = false;
         int width = (int) ogImageView.getImage().getWidth();
         int height = (int) ogImageView.getImage().getHeight();
         double reducedHue = hue - hueTolerance, increasedHue = hue + hueTolerance, reducedSat = sat - satTolerance, increasedSat = sat + satTolerance, reducedBri = bri - briTolerance, increasedBri = bri + briTolerance;
@@ -199,29 +199,9 @@ public class StartController {
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                if (pixelReader.getColor(x, y).getHue() >= (360 - hueTolerance)) {    //for hue values on the upper border
-                    if (rollUnder) {     //if reduced hue value rolled under to 350's
-                        hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue); //check only if hue is greater than rolled-under reduced value.
-                    } else if (rollOver) {
-                        hueRange = (pixelReader.getColor(x, y).getHue() <= 360);
-                    } else {      //if no roll under occurred
-                        hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
-                    }
-                } else if (pixelReader.getColor(x, y).getHue() <= hueTolerance) { //for hue values on the lower border
-                    if (rollOver) { //if increase hue valued rolled over to single digits
-                        hueRange = (pixelReader.getColor(x, y).getHue() <= increasedHue); //check only if hue is less than rolled-over increased value.
-                    } else if (rollUnder) {
-                        hueRange = (pixelReader.getColor(x, y).getHue() >= 0);
-                    } else {      //if no roll over occurred
-                        hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
-                    }
-                } else { //for values not on either border (the nice values)
-                    hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);
-                }
-                satRange = ((pixelReader.getColor(x, y).getSaturation() >= reducedSat) && (pixelReader.getColor(x, y).getSaturation() <= increasedSat));
-                briRange = ((pixelReader.getColor(x, y).getBrightness() >= reducedBri) && (pixelReader.getColor(x, y).getBrightness() <= increasedBri));
+                similarColour = colourRangeTrails(pixelReader,x,y,hueTolerance,rollUnder,rollOver,increasedHue,reducedHue,increasedSat,reducedSat,increasedBri,reducedBri);
 
-                if (hueRange && satRange && briRange) {
+                if (similarColour) {
                     //if within range, set to black
                     blackWhite.getPixelWriter().setColor(x, y, new Color(0, 0, 0, 1));
                     random.getPixelWriter().setColor(x, y, new Color(0, 0, 0, 1));//initialise random with black and white pixels, same as blackWhite
@@ -240,7 +220,7 @@ public class StartController {
 
     //version of method for adding additional pixels over already existing image
     private void addSelectedColour(WritableImage blackWhite, WritableImage sampled, Color selectedCol, PixelReader pixelReader, double hue, double sat, double bri) {
-        boolean hueRange, satRange, briRange, rollOver = false, rollUnder = false;
+        boolean similarColour,  rollOver = false, rollUnder = false;
         int width = (int) ogImageView.getImage().getWidth();
         int height = (int) ogImageView.getImage().getHeight();
         double reducedHue = hue - hueTolerance, increasedHue = hue + hueTolerance, reducedSat = sat - satTolerance, increasedSat = sat + satTolerance, reducedBri = bri - briTolerance, increasedBri = bri + briTolerance;
@@ -260,29 +240,8 @@ public class StartController {
             for (int x = 0; x < width; x++) {
                 //if pixel at index is not already black from previous click
                 if (!Objects.equals(blackWhite.getPixelReader().getColor(x, y), new Color(0, 0, 0, 1))) {
-                    if (pixelReader.getColor(x, y).getHue() >= (360 - hueTolerance)) {    //for hue values on the upper border
-                        if (rollUnder) {     //if reduced hue value rolled under to 350's
-                            hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue); //check only if hue is greater than rolled-under reduced value.
-                        } else if (rollOver) {
-                            hueRange = (pixelReader.getColor(x, y).getHue() <= 360);
-                        } else {      //if no roll under occurred
-                            hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
-                        }
-                    } else if (pixelReader.getColor(x, y).getHue() <= hueTolerance) { //for hue values on the lower border
-                        if (rollOver) { //if increase hue valued rolled over to single digits
-                            hueRange = (pixelReader.getColor(x, y).getHue() <= increasedHue); //check only if hue is less than rolled-over increased value.
-                        } else if (rollUnder) {
-                            hueRange = (pixelReader.getColor(x, y).getHue() >= 0);
-                        } else {      //if no roll over occurred
-                            hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
-                        }
-                    } else { //for values not on either border (the nice values)
-                        hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);
-                    }
-                    satRange = ((pixelReader.getColor(x, y).getSaturation() >= reducedSat) && (pixelReader.getColor(x, y).getSaturation() <= increasedSat));
-                    briRange = ((pixelReader.getColor(x, y).getBrightness() >= reducedBri) && (pixelReader.getColor(x, y).getBrightness() <= increasedBri));
-
-                    if (hueRange && satRange && briRange) {
+                    similarColour = colourRangeTrails(pixelReader,x,y,hueTolerance,rollUnder,rollOver,increasedHue,reducedHue,increasedSat,reducedSat,increasedBri,reducedBri);
+                    if (similarColour) {
                         //if within range, set to black
                         blackWhite.getPixelWriter().setColor(x, y, new Color(0, 0, 0, 1));
                         sampled.getPixelWriter().setColor(x, y, selectedCol);
@@ -296,6 +255,33 @@ public class StartController {
                 }
             }
         }
+    }
+
+    public boolean colourRangeTrails(PixelReader pixelReader, int x, int y, int hueTolerance, boolean rollUnder, boolean rollOver, double increasedHue, double reducedHue, double increasedSat, double reducedSat, double increasedBri, double reducedBri){
+        boolean hueRange, satRange, briRange;
+        if (pixelReader.getColor(x, y).getHue() >= (360 - hueTolerance)) {    //for hue values on the upper border
+            if (rollUnder) {     //if reduced hue value rolled under to 350's
+                hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue); //check only if hue is greater than rolled-under reduced value.
+            } else if (rollOver) {
+                hueRange = (pixelReader.getColor(x, y).getHue() <= 360);
+            } else {      //if no roll under occurred
+                hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
+            }
+        } else if (pixelReader.getColor(x, y).getHue() <= hueTolerance) { //for hue values on the lower border
+            if (rollOver) { //if increase hue valued rolled over to single digits
+                hueRange = (pixelReader.getColor(x, y).getHue() <= increasedHue); //check only if hue is less than rolled-over increased value.
+            } else if (rollUnder) {
+                hueRange = (pixelReader.getColor(x, y).getHue() >= 0);
+            } else {      //if no roll over occurred
+                hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);    //check as normal
+            }
+        } else { //for values not on either border (the nice values)
+            hueRange = (pixelReader.getColor(x, y).getHue() >= reducedHue) && (pixelReader.getColor(x, y).getHue() <= increasedHue);
+        }
+        satRange = ((pixelReader.getColor(x, y).getSaturation() >= reducedSat) && (pixelReader.getColor(x, y).getSaturation() <= increasedSat));
+        briRange = ((pixelReader.getColor(x, y).getBrightness() >= reducedBri) && (pixelReader.getColor(x, y).getBrightness() <= increasedBri));
+
+        return (hueRange && satRange && briRange);
     }
 
     private void randomColours(WritableImage random, ArrayList<Integer> validRoots, int[] pixelSet) {
@@ -313,7 +299,7 @@ public class StartController {
         }
     }
 
-    private void processImgToDisjoint(Image blackWhite, int[] pixelSet) {    //processing the b&w image to a disjoint set
+    public void processImgToDisjoint(Image blackWhite, int[] pixelSet) {    //processing the b&w image to a disjoint set
         int width = (int) blackWhite.getWidth();
         int height = (int) blackWhite.getHeight();
 
@@ -363,7 +349,7 @@ public class StartController {
         }
     }
 
-    private void identifyRoots(int[] pixelSet, ArrayList<Integer> roots) {
+    public void identifyRoots(int[] pixelSet, ArrayList<Integer> roots) {
         for (int elementID = 0; elementID < pixelSet.length; elementID++) {   //navigating through each element (pixel) in the pixelSet array
             boolean matchingRoot = false;
             if (roots.size() == 0 && find(pixelSet, elementID) != -1) {   //if no elements have been added yet and pixel is not equal to -1
@@ -402,7 +388,7 @@ public class StartController {
         return noNodes;
     }
 
-    private void cleanUpExistingComponentsHashMap(HashMap<Integer, String> existingComponentTypes, ArrayList<Integer> validRoots) {  //cleans up hashmap to remove roots that no longer exist, thanks to two roots combining into one set when b/w images are merged
+    public void cleanUpExistingComponentsHashMap(HashMap<Integer, String> existingComponentTypes, ArrayList<Integer> validRoots) {  //cleans up hashmap to remove roots that no longer exist, thanks to two roots combining into one set when b/w images are merged
         ArrayList<Integer> keysToRemove = new ArrayList<>();     //preventing ConcurrentModificationException from altering hashMap while iterating over it
         for (var key : existingComponentTypes.entrySet()) {      //var: https://stackoverflow.com/questions/46898/how-do-i-efficiently-iterate-over-each-entry-in-a-java-map
             if (!validRoots.contains(key.getKey())) {        //if key(root in hashmap) no longer exists in validRoots, remove from hashmap
