@@ -313,7 +313,7 @@ public class StartController {
         }
     }
 
-    private void processImgToDisjoint(Image blackWhite, int[] pixelSet) {    //processing the b&w image to a disjoint set
+    public void processImgToDisjoint(Image blackWhite, int[] pixelSet) {    //processing the b&w image to a disjoint set
         int width = (int) blackWhite.getWidth();
         int height = (int) blackWhite.getHeight();
 
