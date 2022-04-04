@@ -75,6 +75,8 @@ public class PCBAnalyseController {
         });
 
         ogImageView.setOnMouseClicked(e -> {
+            System.out.println("Working...");
+
             PixelReader pr = ogImageView.getImage().getPixelReader();
             Color col = pr.getColor((int) e.getX(), (int) e.getY());
             double hue = col.getHue();
@@ -103,6 +105,8 @@ public class PCBAnalyseController {
             totalResistorsLabel.setText("Resistors: " + resistorCount);
             totalSoldersLabel.setText("Solder Points: " + solderCount);
             totalMiscLabel.setText("Misc: " + miscCount);
+
+            System.out.println("Finished!");
         });
     }
 
@@ -176,6 +180,10 @@ public class PCBAnalyseController {
             openImageLabelBW.setDisable(true);
             openImageLabelSampled.setDisable(true);
             openImageLabelRandom.setDisable(true);
+            openImageLabelMain.setVisible(false);
+            openImageLabelBW.setVisible(false);
+            openImageLabelSampled.setVisible(false);
+            openImageLabelRandom.setVisible(false);
             adviceTextLabel.setVisible(true);
         }
     }

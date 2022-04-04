@@ -22,7 +22,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox fx:id="vBox" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1080.0" xmlns="http://javafx.com/javafx/15" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pcb.pcb.StartController">
+<VBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1080.0" xmlns="http://javafx.com/javafx/15" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pcb.pcb.PCBAnalyseController">
     <children>
         <MenuBar fx:id="menuBar">
             <menus>
@@ -34,11 +34,11 @@
                 </Menu>
             </menus>
         </MenuBar>
-        <SplitPane fx:id="parentPane" dividerPositions="0.2" prefHeight="695.0" prefWidth="1080.0">
+        <SplitPane dividerPositions="0.2" prefHeight="695.0" prefWidth="1080.0">
             <items>
-                <AnchorPane fx:id="optionsPane" minHeight="0.0" minWidth="0.0" prefHeight="633.0" prefWidth="192.0" SplitPane.resizableWithParent="false">
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="633.0" prefWidth="192.0" SplitPane.resizableWithParent="false">
                     <children>
-                        <Button fx:id="removeRectButton" mnemonicParsing="false" onAction="#removeRectangles" text="Remove Highlights" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="50.0" />
+                        <Button mnemonicParsing="false" onAction="#removeRectangles" text="Remove Highlights" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="50.0" />
                         <Label layoutX="20.0" layoutY="44.0" text="Options" AnchorPane.leftAnchor="20.0" AnchorPane.topAnchor="10.0">
                             <font>
                                 <Font name="System Bold" size="13.0" />
