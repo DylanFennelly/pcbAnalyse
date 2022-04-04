@@ -7,7 +7,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class pcbTest {
     private int[] pixelSet, pixelSet2;
     private double width;
-    private StartController startController;
+    private PCBAnalyseController pcbAnalyseController;
     private ArrayList<Integer> roots;
     private HashMap<Integer, String> existingComponentTypes;
 
@@ -23,7 +22,7 @@ class pcbTest {
     void setUp() {
         //array representation of testBlackWhite.png
         pixelSet = new int[16];
-        for (int i=0; i < 16; i++){
+        for (int i = 0; i < 16; i++) {
             pixelSet[i] = i;
         }
         pixelSet[1] = -1;
@@ -34,97 +33,97 @@ class pcbTest {
         pixelSet[12] = -1;
 
         pixelSet2 = new int[16];
-        for (int i=0; i < 16; i++){
+        for (int i = 0; i < 16; i++) {
             pixelSet2[i] = -1;
         }
 
-        width=4;
+        width = 4;
 
         roots = new ArrayList<>();
         existingComponentTypes = new HashMap<>();
 
-        startController = new StartController();
+        pcbAnalyseController = new PCBAnalyseController();
     }
 
     @AfterEach
     void tearDown() {
         pixelSet = null;
         width = 0;
-        startController = null;
+        pcbAnalyseController = null;
     }
 
     @Test
-    void unionFindTest(){
+    void unionFindTest() {
         //testing downward union with -1 sideways
-        StartController.union(0,pixelSet,width);
-        assertEquals(0,StartController.find(pixelSet,4));
-        assertEquals(-1,StartController.find(pixelSet,1));
+        PCBAnalyseController.union(0, pixelSet, width);
+        assertEquals(0, PCBAnalyseController.find(pixelSet, 4));
+        assertEquals(-1, PCBAnalyseController.find(pixelSet, 1));
 
         //testing sideways union with -1 downwards
-        StartController.union(2,pixelSet,width);
-        assertEquals(2,StartController.find(pixelSet,3));
-        assertEquals(-1,StartController.find(pixelSet,6));
+        PCBAnalyseController.union(2, pixelSet, width);
+        assertEquals(2, PCBAnalyseController.find(pixelSet, 3));
+        assertEquals(-1, PCBAnalyseController.find(pixelSet, 6));
 
         //testing right-left boundary union    |   root of 3 is 2 because of above
-        StartController.union(3,pixelSet,width);
-        assertEquals(0,StartController.find(pixelSet,4));
-        assertEquals(2,StartController.find(pixelSet,7));
+        PCBAnalyseController.union(3, pixelSet, width);
+        assertEquals(0, PCBAnalyseController.find(pixelSet, 4));
+        assertEquals(2, PCBAnalyseController.find(pixelSet, 7));
 
         //testing down and left boundary union
-        StartController.union(9,pixelSet,width);
-        assertEquals(9,StartController.find(pixelSet,10));
-        assertEquals(9,StartController.find(pixelSet,13));
+        PCBAnalyseController.union(9, pixelSet, width);
+        assertEquals(9, PCBAnalyseController.find(pixelSet, 10));
+        assertEquals(9, PCBAnalyseController.find(pixelSet, 13));
 
         //testing last pixel
-        StartController.union(15,pixelSet,width);
+        PCBAnalyseController.union(15, pixelSet, width);
     }
 
     @Test
-    void identifyRootsTest(){
+    void identifyRootsTest() {
         //non-unioned pixel set
-        startController.identifyRoots(pixelSet,roots);
-        assertEquals(10,roots.size());
+        pcbAnalyseController.identifyRoots(pixelSet, roots);
+        assertEquals(10, roots.size());
 
         roots.clear();
 
         //unioned pixel set
-        for (int i=0; i < pixelSet.length; i++){
+        for (int i = 0; i < pixelSet.length; i++) {
             if (pixelSet[i] != -1)  //checking pixel is not white (-1)
-                StartController.union(i,pixelSet,width);
+                PCBAnalyseController.union(i, pixelSet, width);
         }
-        startController.identifyRoots(pixelSet,roots);
-        assertEquals(3,roots.size());
+        pcbAnalyseController.identifyRoots(pixelSet, roots);
+        assertEquals(3, roots.size());
 
         roots.clear();
 
         //blacked out pixel set
-        startController.identifyRoots(pixelSet2,roots);
+        pcbAnalyseController.identifyRoots(pixelSet2, roots);
         assertEquals(0, roots.size());
     }
 
     @Test
-    void cleanUpExistingComponentsHashMapTest(){
+    void cleanUpExistingComponentsHashMapTest() {
         //non-unioned pixel set
-        startController.identifyRoots(pixelSet,roots);
-        assertEquals(10,roots.size());
-        for (int i=0; i < roots.size(); i++){
-            existingComponentTypes.put(i,"Test");
+        pcbAnalyseController.identifyRoots(pixelSet, roots);
+        assertEquals(10, roots.size());
+        for (int i = 0; i < roots.size(); i++) {
+            existingComponentTypes.put(i, "Test");
         }
-        assertEquals(10,existingComponentTypes.size());
+        assertEquals(10, existingComponentTypes.size());
 
         //union the pixel set
-        for (int i=0; i < pixelSet.length; i++){
+        for (int i = 0; i < pixelSet.length; i++) {
             if (pixelSet[i] != -1)  //checking pixel is not white (-1)
-                StartController.union(i,pixelSet,width);
+                PCBAnalyseController.union(i, pixelSet, width);
         }
         roots.clear();
-        startController.identifyRoots(pixelSet,roots);
-        startController.cleanUpExistingComponentsHashMap(existingComponentTypes,roots);
-        assertEquals(3,existingComponentTypes.size());
+        pcbAnalyseController.identifyRoots(pixelSet, roots);
+        pcbAnalyseController.cleanUpExistingComponentsHashMap(existingComponentTypes, roots);
+        assertEquals(3, existingComponentTypes.size());
     }
 
     //extracted version of colourRangeTrials method with only hue check and pixelReader removed, as I could not get JavaFX tests working
-    private boolean HueRangeTrailsAlt(Color color, int hueTolerance, boolean rollUnder, boolean rollOver, double increasedHue, double reducedHue){
+    private boolean HueRangeTrailsAlt(Color color, int hueTolerance, boolean rollUnder, boolean rollOver, double increasedHue, double reducedHue) {
         boolean hueRange;
         if (color.getHue() >= (360 - hueTolerance)) {    //for hue values on the upper border
             if (rollUnder) {     //if reduced hue value rolled under to 350's
@@ -153,23 +152,23 @@ class pcbTest {
         //GREEN Hue = 120 (Normal); RED hue = 0 (low hue); CRIMSON = 348 (high hue); BLUE = 240
 
         //Normal colour, inside valid range
-        assertTrue(HueRangeTrailsAlt(Color.GREEN,20, false, false,  140, 100));
+        assertTrue(HueRangeTrailsAlt(Color.GREEN, 20, false, false, 140, 100));
         //Normal colour, outside valid range
-        assertFalse(HueRangeTrailsAlt(Color.GREEN,20, false, false,  200, 160));
+        assertFalse(HueRangeTrailsAlt(Color.GREEN, 20, false, false, 200, 160));
 
         //High hue, roll under
-        assertTrue (HueRangeTrailsAlt(Color.CRIMSON,40, true, false,  20, 300));
+        assertTrue(HueRangeTrailsAlt(Color.CRIMSON, 40, true, false, 20, 300));
         //High hue, roll over
-        assertTrue (HueRangeTrailsAlt(Color.CRIMSON,40, false, true,  0, 320));
+        assertTrue(HueRangeTrailsAlt(Color.CRIMSON, 40, false, true, 0, 320));
 
         //Low hue, roll under
-        assertTrue (HueRangeTrailsAlt(Color.RED,40, true, false,  60, 340));
+        assertTrue(HueRangeTrailsAlt(Color.RED, 40, true, false, 60, 340));
         //Low hue, roll over
-        assertTrue (HueRangeTrailsAlt(Color.RED,60, false, true, 20 , 280));
+        assertTrue(HueRangeTrailsAlt(Color.RED, 60, false, true, 20, 280));
 
         //outside valid range, roll under
-        assertFalse (HueRangeTrailsAlt(Color.BLUE,40, true, false,  60, 340));
+        assertFalse(HueRangeTrailsAlt(Color.BLUE, 40, true, false, 60, 340));
         //outside valid range, roll over
-        assertFalse (HueRangeTrailsAlt(Color.BLUE,60, false, true, 20 , 280));
+        assertFalse(HueRangeTrailsAlt(Color.BLUE, 60, false, true, 20, 280));
     }
 }

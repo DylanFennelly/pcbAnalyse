@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Random;
 
-public class StartController {
+public class PCBAnalyseController {
     private JFrame frame; //used for popup windows
     private int[] pixelSet;
     private ArrayList<Integer> roots, validRoots;
@@ -181,7 +181,7 @@ public class StartController {
     }
 
     private void isolateSelectedColour(Color selectedCol, PixelReader pixelReader, double hue, double sat, double bri) {
-        boolean hueRange, satRange, briRange, similarColour, rollOver = false, rollUnder = false;
+        boolean similarColour, rollOver = false, rollUnder = false;
         int width = (int) ogImageView.getImage().getWidth();
         int height = (int) ogImageView.getImage().getHeight();
         double reducedHue = hue - hueTolerance, increasedHue = hue + hueTolerance, reducedSat = sat - satTolerance, increasedSat = sat + satTolerance, reducedBri = bri - briTolerance, increasedBri = bri + briTolerance;
