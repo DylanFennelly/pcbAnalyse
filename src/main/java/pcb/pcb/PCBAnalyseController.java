@@ -106,7 +106,7 @@ public class PCBAnalyseController {
             totalSoldersLabel.setText("Solder Points: " + solderCount);
             totalMiscLabel.setText("Misc: " + miscCount);
 
-            System.out.println("Finished!");
+            System.out.println("Finished!\n");
         });
     }
 
